@@ -303,7 +303,7 @@ for a in articles[:5]:
 
 **iwencai 的唯一价值：** NL 主题搜索。"人形机器人 行星滚柱丝杠" 这种跨主题检索只有 iwencai 能做。按标的搜研报走东财 reportapi 更稳定。
 
-### 2.4 新浪研报列表 — 研报第二来源（V3.9.0 新增 · #53）
+### 2.4 新浪研报列表 — 研报第二来源
 
 东财研报（§2.1）之外的独立来源：标题、研报类型、日期、机构、研究员与详情页链接。**不含评级与目标价**（需要这些用 §2.1）。
 新浪对连续请求会返回假的「没有找到相关内容」空页（HTTP 200，和真的没有研报一模一样），
@@ -322,7 +322,7 @@ _SINA_REPORT_ROW = re.compile(
     r"<td>([^<]*)</td>\s*<td>([^<]*)</td>\s*<td>(.*?)</td>\s*<td>(.*?)</td>\s*</tr>", re.S)
 
 
-# 实测（2026-09-20）：个股研报搜索两次请求间隔 1 秒时，第二次起返回「没有找到相关内容..」
+# 实测：个股研报搜索两次请求间隔 1 秒时，第二次起返回「没有找到相关内容..」
 # 空页（HTTP 200，与真的没有研报长得一样）；间隔 ≥5 秒恢复正常。因此强制最小间隔，
 # 并对空页等待后重试一次，仍为空才当作「该股确实没有」。
 SINA_REPORT_MIN_INTERVAL = 6.0
@@ -365,7 +365,7 @@ def sina_research_reports(code=None, page=1):
     else:
         url = SINA_REPORT_URL.format(kind="search")
         symbol = norm_ticker(code, stock_only=True)
-        # 北交所必须带 bj 前缀：只给 6 位数字时新浪返回「没有找到」空页（2026-09-20 实测 920982）
+        # 北交所必须带 bj 前缀：只给 6 位数字时新浪返回「没有找到」空页（实测 920982）
         if get_prefix(code) == "bj":
             symbol = "bj" + symbol
         params = {"symbol": symbol, "t1": "all", "p": int(page)}
@@ -378,7 +378,7 @@ def sina_research_reports(code=None, page=1):
                      "type": kind.strip(), "org": _sina_text(org), "author": _sina_text(author),
                      "report_id": rptid,
                      "url": ("https:" + href) if href.startswith("//") else href})
-    # 每页序号都从 1 编起（2026-09-20 实测第 2、3 页也是 1…40）；带序号的行必须全部解析出来。
+    # 每页序号都从 1 编起（实测第 2、3 页也是 1…40）；带序号的行必须全部解析出来。
     # 0 行只有页面写着「没有找到相关内容」（翻过末页 / 该股没有研报）才算真的没有
     numbered = len(re.findall(r"<tr>\s*<td>\d+</td>", text))
     if len(rows) != numbered or (not rows and "没有找到相关内容" not in text):

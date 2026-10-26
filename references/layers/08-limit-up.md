@@ -3,9 +3,9 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 8: 打板层（涨停 / 炸板 / 跌停 / 题材情绪，V3.3.0 新增）
+## Layer 8: 打板层（涨停 / 炸板 / 跌停 / 题材情绪）
 
-> 连板梯队、炸板率、晋级率、涨停原因题材——打板与题材跟踪的高频需求（#23 / #15）。东财四池走 `push2ex.eastmoney.com`（与现有 push2 同源，已纳入 `em_get()` 限流）；涨停原因题材增强用同花顺。**全部免登录、零鉴权。**
+> 连板梯队、炸板率、晋级率、涨停原因题材——打板与题材跟踪的高频需求。东财四池走 `push2ex.eastmoney.com`（与现有 push2 同源，已纳入 `em_get()` 限流）；涨停原因题材增强用同花顺。**全部免登录、零鉴权。**
 
 ### 8.1 东财涨停板池 — 涨停 / 炸板 / 跌停 / 昨日涨停
 
@@ -159,7 +159,7 @@ print(f"连板梯队: {s['ladder']}")
 
 > 晋级率（昨涨停今仍涨停 / 昨涨停总数）可用 `em_yzt_pool()` 的 `pct >= 9.8` 计数除以总数自算。
 
-### 8.4 东财重点监控池（V3.6.0 新增 · #15）
+### 8.4 东财重点监控池
 
 东财 App「重点监控」名单：被交易所风险警示 / 重点监控的标的及其**生效时间窗**。零鉴权静态 JSON，全量返回不分页。
 
@@ -179,7 +179,7 @@ MONITOR_URL = "https://mobappconfig.securities.eastmoney.com/emcfg/stock_monitor
 
 # ⚠️ MARKET 是三值且**含字母 "B"**（北交所），不是 0/1 二值。
 # 写成 `"SH" if MARKET=="1" else "SZ"` 会把北交所标的整片错标成 SZ——
-# 实测 2026-07-31 全量 16 只里就有 3 只 MARKET="B"（*ST康乐 920575 等）。
+# 每天都有 MARKET="B" 的北交所标的混在里面。
 _MONITOR_MARKET = {"1": "SH", "0": "SZ", "B": "BJ"}
 
 def em_stock_monitor(only_active: bool = True) -> list[dict]:
@@ -220,7 +220,7 @@ for s in pool[:5]:
 | VALIDATESTARTDATE / VALIDATEENDDATE | 监控生效起 / 止日（通常 14 天窗口） |
 | LINK_URL | 东财 App 内详情页（可空） |
 
-### 8.5 东财日内异动池 — 严重异常波动（V3.6.0 新增 · #15）
+### 8.5 东财日内异动池 — 严重异常波动
 
 交易所「严重异常波动」口径的异动标的：连续 N 日同向异动、累计偏离值触发阈值等。两个端点同源，**零鉴权，但必须带 `team=h5` 等固定参数**，否则返回 `{"result":1001,"msg":"unknow team"}`。
 

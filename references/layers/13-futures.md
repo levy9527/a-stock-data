@@ -3,7 +3,7 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 13: 期货与大宗商品（V3.9.0 新增 · #49）
+## Layer 13: 期货与大宗商品
 
 A 股之外的商品与股指衍生品：交易所官方日行情、商品期权、会员持仓排名，加新浪日 K 与实时行情、A50 期指与上海金交所现货。
 先执行 Prerequisites 的 V3.9.0 共用 helper，再执行下面整块。
@@ -260,7 +260,7 @@ def _gfex_rows(ymd, trade_type):
     for r in data:
         if str(r.get("variety", "")).endswith(("小计", "总计")):
             continue
-        # 实测（2022-12-22、2026-09-18/19）只有小计 / 总计行没有 delivMonth；字段改名时不能把合约行全部滤掉、报成非交易日
+        # 实测只有小计 / 总计行没有 delivMonth；字段改名时不能把合约行全部滤掉、报成非交易日
         if not r.get("delivMonth"):
             raise RuntimeError(f"广期所合约行缺 delivMonth，格式可能已变: {str(r)[:120]}")
         rows.append(r)
@@ -660,7 +660,7 @@ def futures_kline(symbol, start=None, end=None):
 
     symbol: 'RB0' / 'M0'（主力连续）或 'RB2601' / 'M2601' / 'IF2612'；郑商所也写 4 位年月（'MA2601'），带不带 'nf_' 前缀都行。
     start/end: 'YYYY-MM-DD'，可只给一端。主力连续换月当天会跳空，未做复权。
-    实测（2026-09-22）价格与交易所官方 futures_daily 逐日一致，成交量 / 持仓偶有 ≤0.1% 的出入，精确值以 futures_daily 为准。
+    实测价格与交易所官方 futures_daily 逐日一致，成交量 / 持仓偶有 ≤0.1% 的出入，精确值以 futures_daily 为准。
     结算价新浪给得不全（给 0 的统一成 None）：中金所品种基本没有；主力连续早年缺得多（CU0 5285 根缺 1364 根，
     最晚缺到 2024-09-25），需要结算价用 futures_daily。具体合约只能取到约 2022 年起到期的，更早的新浪返回空；
     中金所主力连续（IF0 / IC0 / IH0 / T0 / TF0）只从 2017-01-17 起，更早的用 futures_daily。

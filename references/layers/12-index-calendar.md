@@ -3,7 +3,7 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 12: 指数与交易日历（V3.8.0）
+## Layer 12: 指数与交易日历
 
 补齐指数成分、权重、指数估值与官方交易日历。以下完整代码块可独立执行，仅使用已有的
 `requests pandas xlrd openpyxl`；不依赖前面章节的股票代码推断规则。指数代码必须是 **6 位纯数字**，

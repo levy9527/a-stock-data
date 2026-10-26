@@ -9,7 +9,7 @@
 > ⚠️ 本层是**月频**数据，不要当日频信号用；发布日固定（社融次月中旬、PMI 月末），
 > 未发布月份**不会**出现在返回里（见下方 fail-fast 说明）。
 >
-> **社融支持范围：2021 年起**（2026-08-19 实测 2021~2026 六年全部可解析，每年 12 行且不跨年）。
+> **社融支持范围：2021 年起**（每年 12 行、不跨年）。
 > 2020 及更早是旧版式——表头与项目名合并在一个单元格、且附表带「2017 年以来」的历史区，
 > 传入这些年份会**抛错而不是返回可疑数据**。
 
@@ -76,7 +76,7 @@ def pboc_social_financing(year: Optional[int] = None) -> pd.DataFrame:
         raise RuntimeError(
             f"{target} 年社融表没有独立的「月份」表头单元格。"
             "**2020 及更早采用旧版式**（表头与项目名合并在同一单元格，且附表含 2017 年以来的历史区），"
-            "本端点仅支持 **2021 年起**（2026-08-19 实测 2021~2026 全部可解析）。"
+            "本端点仅支持 **2021 年起**（实测 2021~2026 全部可解析）。"
         )
 
     cols = ["month", "afre_total", "rmb_loans", "fx_loans", "entrusted_loans",
@@ -118,7 +118,6 @@ def pboc_social_financing(year: Optional[int] = None) -> pd.DataFrame:
 # 用法
 df = pboc_social_financing()          # 最新年（只含已发布月份）
 print(df[["month", "afre_total", "rmb_loans", "government_bonds"]].to_string(index=False))
-# 实测 2026-08-19：返回 7 行（2026-01 ~ 2026-07），2026-01 社融增量 72,185 亿
 # 全部 12 列：month / afre_total(社融增量) / rmb_loans(人民币贷款) / fx_loans(外币贷款) /
 #   entrusted_loans(委托贷款) / trust_loans(信托贷款) /
 #   undiscounted_bankers_acceptance(未贴现银行承兑汇票) / corporate_bonds(企业债券) /
@@ -127,7 +126,6 @@ print(df[["month", "afre_total", "rmb_loans", "government_bonds"]].to_string(ind
 
 hist = pboc_social_financing(2024)    # 指定年份
 print(len(hist), "个月, 全年社融增量", f"{hist['afre_total'].sum():,.0f}", "亿元")
-# 实测：12 个月, 322,588 亿元
 ```
 
 ---
@@ -228,18 +226,17 @@ def nbs_pmi() -> dict:
 # 用法
 p = nbs_pmi()
 print(p["period"], "制造业", p["manufacturing_pmi"], "非制造业", p["non_manufacturing_pmi"])
-# 实测 2026-08-19：2026-07 制造业 49.2 / 非制造业 49.0 / 综合 49.3
-#                  大型 49.5 / 中型 49.7 / 小型 47.4（均在荣枯线下）
+# 三条线都应落在 40~60 区间；50 是荣枯线
 ```
 
 > **解读口径：** PMI > 50 扩张、< 50 收缩；连续两月同向才算趋势。
 > 大/中/小型企业分档能看结构分化——小型企业长期低于大型是常态，看的是**差值变化**不是绝对值。
 
-### 11.3 中债收益率曲线 — 国债 / 商业银行 AAA / 中短票 AAA（V3.9.0 新增）
+### 11.3 中债收益率曲线 — 国债 / 商业银行 AAA / 中短票 AAA
 
 中央结算公司官方数据，3 月到 30 年共 8 档期限，单位 %。`curve='all'` 一次返回三条曲线（按 `curve` 列区分）。
 官网单次查询超过 1 年会静默返回 0 行，本函数按 360 天切片；一周以上的切片 0 行视为接口口径变化并抛错。
-中短期票据曲线没有 30 年，该列为 None。三条曲线的起点不同（国债 2006-03-01、中短票 2006-12-25、商业银行 2009-12-24，2026-09-20 实测），
+中短期票据曲线没有 30 年，该列为 None。三条曲线的起点不同（国债 2006-03-01、中短票 2006-12-25、商业银行 2009-12-24，实测），
 start 更早时从起点开始取；每段返回的日期必须落在该段内，`all` 模式按起点核对**返回的每一天**该有的曲线是否齐全，不齐抛 `RuntimeError`。
 中债不公布债券市场交易日历、页面也没有总条数，整天缺失无法判定（只有整段 7 天以上 0 行才报错）。
 
@@ -254,7 +251,7 @@ _CHINABOND_HEADER = ["曲线名称", "日期", "3月", "6月", "1年", "3年", "
 _CHINABOND_TENORS = ["3m", "6m", "1y", "3y", "5y", "7y", "10y", "30y"]
 CHINABOND_CURVE_NAMES = {"treasury": "中债国债收益率曲线", "bank_aaa": "中债商业银行普通债收益率曲线(AAA)",
                          "mtn_aaa": "中债中短期票据收益率曲线(AAA)"}
-# 官网上各曲线的第一天（2026-09-20 实测）；all 模式按日期核对当天应有的曲线是否齐全
+# 官网上各曲线的第一天（实测）；all 模式按日期核对当天应有的曲线是否齐全
 CHINABOND_FIRST_DAY = {"treasury": "2006-03-01", "mtn_aaa": "2006-12-25", "bank_aaa": "2009-12-24"}
 
 
@@ -329,7 +326,7 @@ def chinabond_yield_curve(start, end=None, curve="all"):
 ```
 <!-- v39-chinabond:end -->
 
-### 11.4 银行间回购定盘利率 FR / FDR（V3.9.0 新增）
+### 11.4 银行间回购定盘利率 FR / FDR
 
 中国货币网（外汇交易中心）官方 CSV：`kind='FR'` 全市场回购定盘利率 FR001 / FR007 / FR014（约近 3 年），
 `kind='FDR'` 银银间 FDR001 / FDR007 / FDR014（约近 1 年）。单位 %。看资金面松紧的日频指标。
@@ -375,7 +372,7 @@ def repo_fixing_rates(kind="FR"):
 ```
 <!-- v39-repo-fixing:end -->
 
-### 11.5 LPR 贷款市场报价利率全历史（V3.9.0 新增）
+### 11.5 LPR 贷款市场报价利率全历史
 
 东财数据中心。2013-10 至 2019-08 为旧机制的逐日 1 年期 LPR（`lpr_5y` 为 None，5 年期 2019-08-20 才设立）；
 2019-08 改革后每月 20 日报价。同一报表里 2013 年前的行是旧贷款基准利率，已剔除。
@@ -399,7 +396,7 @@ def lpr_history():
 ```
 <!-- v39-lpr:end -->
 
-### 11.6 全球宏观日历（华尔街见闻）（V3.9.0 新增）
+### 11.6 全球宏观日历（华尔街见闻）
 
 经济数据的公布值 / 预期 / 前值 + 重要事件（央行议息等）。区间含两端最多 92 天，接口单次只允许一周，本函数按 7 天切片。
 `importance` 1–4，数字越大越重要（实测 4 = 工业增加值、社零这类头条数据）；`kind`：`data` 经济数据 / `event` 事件。
@@ -465,7 +462,7 @@ def macro_calendar(start, end=None, country=None, min_importance=1):
             # 每段只接受段内日期：接口若回了别的时间段（缓存 / 忽略参数），按 id 去重会把缺掉的几段静默吞掉
             if not cursor <= when.date() <= stop:
                 raise RuntimeError(f"华尔街见闻 请求 {cursor}~{stop} 却返回了 {when:%Y-%m-%d} 的条目，结果不可信")
-            # 各段互不重叠，2026-09-20 实测 31 周 5976 条没有重复 id；重复了按 id 存会静默丢掉一条
+            # 各段互不重叠，实测 31 周 5976 条没有重复 id；重复了按 id 存会静默丢掉一条
             level = item.get("importance")
             if isinstance(level, bool) or not isinstance(level, int) or level not in (1, 2, 3, 4):
                 # 不校验的话 importance=True/99 会照常出表，"2" 还会让下面的筛选漏出原生 TypeError

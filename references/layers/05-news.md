@@ -58,15 +58,13 @@ for n in news[:5]:
     print(f"  {n['time']} | {n['source']} | {n['title']}")
 ```
 
-> **⚠️ 间歇性返回空（#18）：** 部分大陆住宅 IP 调本接口会只拿到 `passportWeb`（股民资料）而无 `cmsArticleWebOld`（文章列表）——这是东财对该 IP 的间歇风控，非代码问题。代码已对空结果安全返回 `[]`；遇到时隔几分钟或换网络重试即可。
+> **⚠️ 间歇性返回空：** 部分大陆住宅 IP 调本接口会只拿到 `passportWeb`（股民资料）而无 `cmsArticleWebOld`（文章列表）——这是东财对该 IP 的间歇风控，非代码问题。代码已对空结果安全返回 `[]`；遇到时隔几分钟或换网络重试即可。
 
-### 5.2 财联社快讯（直连 cls.cn，v1 API + 本地签名）✅ 已复活（2026-07）
+### 5.2 财联社快讯（直连 cls.cn，v1 API + 本地签名）
 
-> **✅ 2026-07 复活：** 旧接口 `cls.cn/nodeapi/telegraphList` 2026-05 下线（站点改
-> Next.js，旧址返回 HTML 而非 JSON，#14）。现走新版 `cls.cn/v1/roll/get_roll_list`——它
-> 强制校验 `sign`，但签名**纯本地计算、无需任何 key**：`sign = md5(sha1(按 key 字典序
-> 拼接的 query 串))`。财联社快讯偏 A 股财经、时效强，与 §5.3 东财 7×24 **互为独立备份**
-> （两条不同源、不同风控面，一条被封另一条仍在）。2026-07-11 实测 errno=0 正常返回。
+> 走 `cls.cn/v1/roll/get_roll_list`：强制校验 `sign`，但签名**纯本地计算、无需任何 key**
+> （`sign = md5(sha1(按 key 字典序拼接的 query 串))`）。偏 A 股财经、时效强，与 §5.3 东财 7×24
+> **互为独立备份**（不同源、不同风控面）。旧 `nodeapi` 接口已下线，不要再用。
 
 ```python
 import requests
@@ -143,7 +141,7 @@ for n in news[:10]:
     print(f"  {n['time']} | {n['title']}")
 ```
 
-### 5.4 华尔街见闻 7×24 快讯（V3.9.0 新增）
+### 5.4 华尔街见闻 7×24 快讯
 
 新闻层第三个来源，与 §5.2 财联社、§5.3 东财互为备份。`channel` 常用 `global-channel`（要闻）/ `a-stock-channel`（A 股）。
 `importance` 取见闻的 score 字段，实测只有 1 / 2，100 条里约 6 条为 2（头条级快讯）。时间为北京时间。
@@ -201,7 +199,7 @@ def wallstreetcn_lives(channel="global-channel", limit=50, cursor=None):
 ```
 <!-- v39-wscn-lives:end -->
 
-### 5.5 央视《新闻联播》文字稿（V3.9.0 新增）
+### 5.5 央视《新闻联播》文字稿
 
 央视网官方页面：当日条目标题 + 逐条正文（`with_content=True` 约 15 次请求）。页面结构 2016 / 2019 / 2021 年改过三次，
 三种写法都能解析。个别老视频已被下架，其 `content` 为 None（标题仍在）。当晚约 20:00 后更新，未发布抛 `ValueError`。

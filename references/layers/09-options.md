@@ -3,9 +3,9 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 9: ETF 期权层（T型报价 + 希腊字母 + IV，V3.3.0 新增）
+## Layer 9: ETF 期权层（T型报价 + 希腊字母 + IV）
 
-> 50ETF / 300ETF / 科创50ETF / 500ETF 期权（#13）。走新浪源——**T型报价、希腊字母、隐含波动率均由交易所/新浪预先算好，无需本地算 BSM**。免费直连，唯一注意带 `Referer`。
+> 50ETF / 300ETF / 科创50ETF / 500ETF 期权。走新浪源——**T型报价、希腊字母、隐含波动率均由交易所/新浪预先算好，无需本地算 BSM**。免费直连，唯一注意带 `Referer`。
 
 ### 9.1 合约清单 + T型报价 + 希腊字母
 

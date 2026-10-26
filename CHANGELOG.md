@@ -22,6 +22,17 @@
 - `references/20-valuation.md`、`21-workflows.md`。
 - 不另存 FAQ 与版本历史：`30-faq.md` 的条目几乎全与 `README.md` 的 FAQ 或各层「踩坑提醒」重复，已删除；其中 agent 真正需要的一条口径（只取数、不带回测引擎，聚宽代码用 `to_joinquant()` 转换）并入 `SKILL.md` 开头，`ths_eps_forecast` 空表口径、「同花顺热点零鉴权、别打 NL 选股接口」并入 §2.2 / §3.1。
 
+### 踩坑记录与实测基线移出 skill
+
+`references/` 里的「为什么这么改 / 什么时候发现的 / 旧写法 / 实测样本」全部搬到仓库文档，正文只留结论：
+
+- 新增 [`docs/pitfalls.md`](docs/pitfalls.md)：按 § 排序，每条先给一行结论（= 正文那句话），再给证据
+  （Issue 号、发现与修正日期、实测样本、被替换的源）。含旧 § 编号对照表（V3.10.0 行情层重排）。
+- 新增 [`docs/validation-baseline.md`](docs/validation-baseline.md)：各端点最近一次验证的行数、抽样值与分页上限。
+- `references/` 侧同步清理：删掉「V3.x 替换说明」段、层标题里的版本与 issue 标记、正文里的测量日期与抽样清单；
+  踩坑段落压缩成结论（字段号 43/44/45/46、成交量整手取整与回填时点、1 分钟线 241 根、深市分钟边界、
+  qfq 等差口径、北交所无复权因子、F10 只剩「最新提示」等）。
+
 ### 测试与文档
 
 - 新增 `tests/_skill_source.py`：把 `SKILL.md` + `references/**/*.md` 拼成一份文本供测试使用，

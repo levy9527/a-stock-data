@@ -3,12 +3,12 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 14: 事件驱动（V3.9.0 新增）
+## Layer 14: 事件驱动
 
 公司层面的事件型数据，全部来自东财数据中心（经 `em_get()` 限流，股权质押数据的原始来源是中国结算每周统计）。
 `code` 不给时为全市场、按公告日倒序取 `limit` 条（上限 5000）。**全市场 0 行抛错；带了个股 / 日期条件的 0 行是「确实没有」，返回空表。**
 `code` 只收个股：`sh000001` / `000001.XSHG` 这类显式沪市指数写法直接抛 `ValueError`（归一化成 000001 会查到平安银行）。
-翻页排序字段都能唯一确定一行，并逐页检查重复（实测只按质押比例排序时 2212 行里重复 1 行、漏 1 行）。
+翻页排序字段都能唯一确定一行，并逐页检查重复（只按质押比例排序会出现重复与漏行，必须叠加唯一字段）。
 
 | 函数 | 数据 | 单位 / 口径 |
 |---|---|---|
@@ -211,7 +211,7 @@ def share_buyback(code=None, progress=None, limit=500):
 
     progress: None 或 '董事会预案' / '股东大会通过' / '股东大会否决' / '实施中' / '停止实施' / '完成实施'。
     股数单位 股，金额单位 元，pct_total_* 为占公告前一日总股本 %。done_* 为已回购部分（未开始实施为 None）。
-    东财另有 007 / 008 两个进度码（2026-09-20 实测 5516 条里共 13 条），它自己的页面也不显示名称，
+    东财另有 007 / 008 两个进度码（实测 5516 条里共 13 条），它自己的页面也不显示名称，
     这里 progress 为 None、progress_code 保留原码。
     """
     limit = _v39_limit(limit)
@@ -256,7 +256,7 @@ def equity_pledge(code=None, date=None, limit=5000):
     两个都给抛 ValueError（不会静默丢掉其中一个）。
     中国结算按周发布（通常为周五），date 不是统计日会得到 ValueError。
     pledge_ratio_pct 为质押股数占总股本 %；股数单位 万股，市值单位 万元。
-    只覆盖沪深（2026-09-20 实测全市场 2212 条没有北交所），北交所代码直接抛 ValueError，不返回空表。
+    只覆盖沪深（实测全市场 2212 条没有北交所），北交所代码直接抛 ValueError，不返回空表。
     """
     limit = _v39_limit(limit)
     if code is not None and date is not None:

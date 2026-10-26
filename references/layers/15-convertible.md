@@ -3,7 +3,7 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 15: 可转债（V3.9.0 新增）
+## Layer 15: 可转债
 
 东财数据中心可转债全表：基本条款（评级、规模、转股起始日、到期日）+ 最新转股价 / 债价 / 正股价 / 转股价值 / 溢价率。
 行情类字段由东财服务端按最新报价填入（盘中为实时价，停牌或未上市为 None）。

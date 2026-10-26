@@ -3,7 +3,7 @@
 > 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../../SKILL.md) · 共用 helper [`01-common.md`](../01-common.md) · 备胎/降级 [`02-data-sources.md`](../02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-## Layer 10: 舆情互动层（互动易问答 + 热榜 + 人气榜，V3.3.0 新增）
+## Layer 10: 舆情互动层（互动易问答 + 热榜 + 人气榜）
 
 > 投资者互动问答 + 市场热度——AI 问答与选题的独家信源。**互动易**（巨潮）能答"公司怎么回应某传闻/利好"，别处拿不到；**同花顺热榜 / 东财人气榜**给"当下最热个股 + 被归到什么概念在炒"。全部免登录、零鉴权。
 
@@ -48,7 +48,7 @@ for q in cninfo_irm("002594", page_size=30):
         print(f"  Q: {q['question'][:30]}\n  A[{q['answerer']}]: {q['answer'][:50]}")
 ```
 
-> **坑：** ① 第二步参数放 **query string**（不是 body），否则 400。② `orgId` 取自第一步的 `secid`（即便前缀是 `gshk`，靠 `stockcode` 过滤照样拿 A 股问答）。③ 最新提问常未回复（`answer=None`），回复率因公司而异（实测立讯精密 002475 回复多、京东方 000725 几乎不回）。④ 时间是毫秒时间戳。⑤ **沪市公司查不到**（2026-09-20 实测 600519 / 600000 / 688981 均 0 条，互动易只覆盖深市），沪市问答用 §10.3 上证e互动。⑥ 请求失败时本函数打印 WARN 并返回 `[]`，与「确实没有问答」无法区分，批量使用时注意日志。
+> **坑：** ① 第二步参数放 **query string**（不是 body），否则 400。② `orgId` 取自第一步的 `secid`（即便前缀是 `gshk`，靠 `stockcode` 过滤照样拿 A 股问答）。③ 最新提问常未回复（`answer=None`），回复率因公司而异（实测立讯精密 002475 回复多、京东方 000725 几乎不回）。④ 时间是毫秒时间戳。⑤ **沪市公司查不到**（实测 600519 / 600000 / 688981 均 0 条，互动易只覆盖深市），沪市问答用 §10.3 上证e互动。⑥ 请求失败时本函数打印 WARN 并返回 `[]`，与「确实没有问答」无法区分，批量使用时注意日志。
 
 ### 10.2 同花顺热榜 + 东财人气榜（市场热度 + 概念命中）
 
@@ -128,13 +128,13 @@ print("人气第一:", hot[0]["name"], "概念命中:", em_hot_concept(hot[0]["c
 
 > **坑：** ① 东财人气榜 `getAllCurrentList` 只返回带前缀代码（SZ/SH），名称要再走 `ulist.np` 补（`SZ`→`0.`、`SH`→`1.`）。② `ulist.np` 的 `diff` 偶尔是 dict（按序号为键），已做 `list(values())` 归一化。③ 同花顺热榜 `type` 可选 `hour`/`day`。
 
-### 10.3 上证e互动 — 沪市投资者问答（V3.9.0 新增）
+### 10.3 上证e互动 — 沪市投资者问答
 
-上交所官方问答平台。§10.1 巨潮互动易**实测对沪市返回 0 条**（2026-09-20，600519 / 600000 / 688981），
+上交所官方问答平台。§10.1 巨潮互动易**对沪市返回 0 条**（只覆盖深市），
 沪市公司的问答只能走这里。`code=None` 看全市场；给沪市代码（60 / 68 / 900 开头）只看该公司。
 `kind='answered'` 为最新已回复问答，`kind='questions'` 为最新提问（含未回复，`answer` 为 None）。
 平台只开放近期问答，公司维度实测约近 1 个月。首次查某家公司要在公司列表里定位 uid（倍增 + 二分，约 10–13 次请求），之后走缓存。
-**时间写法不统一（2026-10-23 实测）：** 提问时间是绝对时间（`2026年10月21日 17:47`），1 天内的回复时间是相对时间（`昨天 18:22`），
+**时间写法不统一：** 提问时间是绝对时间（`2026年10月21日 17:47`），1 天内的回复时间是相对时间（`昨天 18:22`），
 返回的 `question_time` / `answer_time` 都换算成 `YYYY-MM-DD HH:MM`（相对时间按北京时间 UTC+8），认不出直接报错。
 北交所公司两个平台都没有。
 
@@ -149,7 +149,7 @@ _SSE_CN_TZ = _dt.timezone(_dt.timedelta(hours=8))   # 「昨天 18:22」按北�
 _sse_uid_cache = {}                 # 证券代码 → 上证e互动公司 uid
 _sse_company_pages = {}             # 页码 → [(code, uid)]，二分查找时复用
 _SSE_COMPANY_END = "没有任何上市公司的信息"
-# 没有问答时的提示：公司维度「近1个月暂无回复 / 暂无提问」，全市场翻过末页「暂时没有问答内容」（2026-09-20 实测）
+# 没有问答时的提示：公司维度「近1个月暂无回复 / 暂无提问」，全市场翻过末页「暂时没有问答内容」（实测）
 _SSE_EMPTY_NOTE = re.compile(r'class="m_feed_note"[^>]*>[^<]*(暂无|暂时没有)[^<]*<')
 
 
@@ -160,11 +160,11 @@ def _sse_company_page(page):
                              headers={"Referer": SSE_E_BASE + "/"})
         payload = _v39_json(response)
         content = payload.get("content") if isinstance(payload, dict) else None
-        if not isinstance(content, str):    # 末页之后也返回字符串（2026-09-20 实测），缺 content 是格式变了
+        if not isinstance(content, str):    # 末页之后也返回字符串（实测），缺 content 是格式变了
             raise RuntimeError(f"上证e互动公司列表第 {page} 页的返回结构变了（没有 content 字符串）")
         pairs = [(code, uid) for uid, code in
                  re.findall(r"uid=['\"]?(\d+)['\"]?[^>]*>\s*<img[^>]*company/(\d{6})\.png", content)]
-        # 末页之后固定返回「没有任何上市公司的信息」（2026-09-20 实测第 74 页起）。
+        # 末页之后固定返回「没有任何上市公司的信息」（实测第 74 页起）。
         # 第 1 页为空、或者别的页既解析不出公司又没有这句话，只能是页面格式变了，不能说成「公司不存在」
         if not pairs and (page == 1 or _SSE_COMPANY_END not in content):
             raise RuntimeError(f"上证e互动公司列表第 {page} 页解析出 0 家公司，页面格式可能已变")
@@ -201,7 +201,7 @@ def _sse_text(fragment):
     return _html.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
 
 
-# 站点时间两种写法并存（2026-10-23 实测）：提问是绝对时间「2026年10月21日 17:47」，
+# 站点时间两种写法并存（实测）：提问是绝对时间「2026年10月21日 17:47」，
 # 1 天内的回复是相对时间「昨天 18:22」。只认绝对写法会让整页解析直接抛错。
 _SSE_ABS_TIME = re.compile(r"(\d{4})\s*[年\-/]\s*(\d{1,2})\s*[月\-/]\s*(\d{1,2})\s*日?\s*(\d{1,2}):(\d{2})")
 _SSE_DAY_WORD_TIME = re.compile(r"^(今天|昨天|前天)\s*(\d{1,2}):(\d{2})$")
@@ -318,7 +318,7 @@ def sse_e_interaction(code=None, kind="answered", page=1, page_size=10):
     code=None 看全市场，给沪市代码（60/68/900 开头）只看该公司。
     kind='answered'：最新已回复问答；kind='questions'：最新提问（含未回复，answer 为 None）。
     平台只开放近期问答：公司维度实测约近 1 个月，更早的翻页为空。
-    §10.1 巨潮互动易实测对沪市返回 0 条（2026-09-20，600519/600000/688981），沪市问答只能走本函数。
+    §10.1 巨潮互动易对沪市返回 0 条（只覆盖深市），沪市问答只能走本函数。
     首次查某家公司要先在公司列表里定位 uid（倍增 + 二分，约 10–13 次请求），之后走缓存。
     """
     if kind not in _SSE_KIND:

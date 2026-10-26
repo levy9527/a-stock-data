@@ -611,6 +611,7 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 ### 维护约定
 
 - **代码与文档同源**：测试直接执行 `references/**/*.md` 里的原文代码块，不维护第二份实现。改代码就改文档，改完跑 `python3 -m unittest discover -s tests`。
+- **知识分两处放**：`references/` 只写结论（怎么用、怎么解释数据）；「为什么这么改」——Issue 号、发现/修正日期、实测样本、旧写法与被替换的源——写 [`docs/pitfalls.md`](docs/pitfalls.md)；各端点最近一次验证的行数与抽样值写 [`docs/validation-baseline.md`](docs/validation-baseline.md)。
 - **新增端点要带 marker 块**（`<!-- v39-xxx:start -->` … `<!-- v39-xxx:end -->` 包住可执行代码），测试按 marker 抽取，见现有 `v39-*` / `v310-*` 写法。
 - **`SKILL.md` 与 `references/` 必须成套更新**：`SKILL.md` 只放文件地图与铁律，代码和实测记录进 `references/layers/`。
 - 改动记录写 `CHANGELOG.md`；数据源取舍与实测边界写 `docs/`。

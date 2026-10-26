@@ -130,7 +130,7 @@ for a in all_articles[:10]:
             print(f"  {stock_code}: 东财 {len(em)} 篇")
 ```
 
-### 流程 D: 新标的快速调研（V3.0 增强版）
+### 流程 D: 新标的快速调研
 
 ```python
 code = "688017"
