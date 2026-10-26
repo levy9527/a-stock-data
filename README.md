@@ -608,6 +608,13 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 
 逐个入口的实测行数与数据边界见 [v3.9.0 整合记录](docs/source-integration-v3.9.0.md)；V3.8 的记录见 [v3.8.0](docs/source-integration-v3.8.0.md)。
 
+### 维护约定
+
+- **代码与文档同源**：测试直接执行 `references/**/*.md` 里的原文代码块，不维护第二份实现。改代码就改文档，改完跑 `python3 -m unittest discover -s tests`。
+- **新增端点要带 marker 块**（`<!-- v39-xxx:start -->` … `<!-- v39-xxx:end -->` 包住可执行代码），测试按 marker 抽取，见现有 `v39-*` / `v310-*` 写法。
+- **`SKILL.md` 与 `references/` 必须成套更新**：`SKILL.md` 只放文件地图与铁律，代码和实测记录进 `references/layers/`。
+- 改动记录写 `CHANGELOG.md`；数据源取舍与实测边界写 `docs/`。
+
 ## 更新日志
 
 见 [CHANGELOG.md](./CHANGELOG.md)。

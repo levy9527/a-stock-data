@@ -651,6 +651,3 @@ export IWENCAI_API_KEY="your_key_here"
 
 `references/` 与 `SKILL.md` 必须一起复制/更新：代码只在 `references/` 里维护一份，SKILL.md 只做路由与铁律。
 
----
-
-> 📦 https://github.com/simonlin1212/a-stock-data — Star ⭐ 是最好的支持

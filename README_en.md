@@ -552,6 +552,13 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 
 Per-entry row counts and data boundaries are in the [v3.9.0 integration record](docs/source-integration-v3.9.0.md); V3.8 is in [v3.8.0](docs/source-integration-v3.8.0.md) (both Chinese).
 
+### Maintenance conventions
+
+- **Docs and code are one source**: tests execute the code blocks in `references/**/*.md` verbatim — there is no second implementation. Change the docs with the code, then run `python3 -m unittest discover -s tests`.
+- **New endpoints must ship a marker block** (`<!-- v39-xxx:start -->` … `<!-- v39-xxx:end -->` around the runnable code); tests extract code by marker, see the existing `v39-*` / `v310-*` blocks.
+- **`SKILL.md` and `references/` must be updated together**: `SKILL.md` only carries the file map and ground rules; code and measured notes go under `references/layers/`.
+- Record changes in `CHANGELOG.md`; record source trade-offs and measured limits in `docs/`.
+
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md).
