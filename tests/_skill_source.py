@@ -20,7 +20,3 @@ def source_files():
 
 
 SKILL = "\n\n".join(path.read_text(encoding="utf-8") for path in source_files())
-
-# 版本履历按约定保留发布当时的旧编号，语义检查（如「§1.N 指向哪个函数」）不看它。
-HISTORY = REFERENCES / "90-version-history.md"
-SKILL_CURRENT = "\n\n".join(path.read_text(encoding="utf-8") for path in source_files() if path != HISTORY)

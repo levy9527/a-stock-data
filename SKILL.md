@@ -33,7 +33,6 @@ description: 需要写代码实际获取A股及相关市场真实数据时使用
 | [`references/20-valuation.md`](references/20-valuation.md) | 估值公式：前向 PE、PE 消化年数、PEG、`full_valuation` | 估值计算 |
 | [`references/21-workflows.md`](references/21-workflows.md) | 完整调研流程（多端点串联模板） | 单票/板块深度调研 |
 | [`references/30-faq.md`](references/30-faq.md) | FAQ：数据口径、失效判据、时区、能力边界 | 遇到「为什么是空 / 能不能回测」 |
-| [`references/90-version-history.md`](references/90-version-history.md) | 版本履历（含旧编号对照） | 追历史变更 |
 
 ## 核心铁律（不读长文档也必须遵守）
 

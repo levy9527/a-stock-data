@@ -23,7 +23,6 @@ from urllib3.exceptions import ReadTimeoutError
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_v39_sources import (REAL_REQUESTS, SKILL, Response, _block_defining, _marker_code,  # noqa: E402
                               load_shipped_code)
-from _skill_source import SKILL_CURRENT  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 NEW_ENDPOINTS = ["tencent_ticks", "futures_kline"]
@@ -78,10 +77,10 @@ class ShapeTests(unittest.TestCase):
                                 "1.7": "tdx_client"})
 
     def test_section_references_point_at_the_defining_section(self):
-        """「§1.N `func(`」这类引用重排后最容易指错；版本履历按约定保留旧编号，SKILL_CURRENT 已排除。"""
+        """「§1.N `func(`」这类引用重排后最容易指错。"""
         where = {f: num for num, (_, funcs) in LAYER1.items() for f in funcs}
         where["tdx_client"] = "1.7"
-        texts = {"SKILL.md": SKILL_CURRENT}
+        texts = {"SKILL.md": SKILL}
         for name in ("README.md", "README_en.md"):
             texts[name] = (ROOT / name).read_text(encoding="utf-8")
         checked = 0

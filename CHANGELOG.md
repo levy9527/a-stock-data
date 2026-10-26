@@ -19,13 +19,13 @@
 - `references/02-data-sources.md`：数据源优先级、东财风控与封禁案例、官方两融/北交所备胎、
   备用源速查与降级策略。
 - `references/layers/01-quote.md … 15-convertible.md`：十五层的完整代码与实测记录，章节号（§1.2 等）不变。
-- `references/20-valuation.md`、`21-workflows.md`、`30-faq.md`、`90-version-history.md`。
+- `references/20-valuation.md`、`21-workflows.md`、`30-faq.md`。
+- 版本历史不另存一份：逐版本细节只在 `CHANGELOG.md`（skill 里不重复开发过程）。
 
 ### 测试与文档
 
 - 新增 `tests/_skill_source.py`：把 `SKILL.md` + `references/**/*.md` 拼成一份文本供测试使用，
   marker 块（`<!-- v39-*:start -->`）与 `## Layer N:` 切片行为与单文件时完全一致；四个测试文件改为从这里取源。
-  版本履历（`90-version-history.md`，按约定保留发布当时的旧编号）单独排除在「§ 引用指向」语义检查之外。
 - 全量 191 条离线测试（+4 条联网默认跳过）在拆分后逐条通过；新增 `missing lines` 校验确认除
   frontmatter description 与 When to Activate 的重写外，正文内容零丢失。
 - `README.md` / `README_en.md` 安装步骤改为整目录复制（`cp -R SKILL.md references`），
