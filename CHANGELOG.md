@@ -1,5 +1,36 @@
 # Changelog
 
+## 未发布 — 文档结构拆分（不改数据、不改入口数）
+
+十五层、87 个入口、34 个来源与全部返回字段都不变，只重新组织文档与仓库目录。
+
+### 变更
+
+**`SKILL.md` 从 43.8 万字符的单文件改为「入口 + 分层文档」**
+
+原来所有层的可运行代码都堆在一个 `SKILL.md` 里（7653 行），agent 一激活就要整包入上下文。现在：
+
+- `SKILL.md`（约 100 行）：frontmatter、文件地图（要什么数据读哪一份）、7 条核心铁律
+  （ticker 归一化、`em_get` 限流、源优先级、「确实没有」vs「接口坏了」、北京时间、Python 3.9、不编造）、
+  When to Activate、维护与测试约定。
+- `references/00-index.md`：87 端点总表（§ → 函数 → 拿什么 → 源）+ 层目录速览。
+- `references/01-common.md`：依赖安装、iwencai Key、mootdx 客户端、市场前缀、`norm_ticker`、
+  东财统一请求 `em_get`、`V39_RETRY_SESSION` 等共用 helper（写任何一层代码前先读）。
+- `references/02-data-sources.md`：数据源优先级、东财风控与封禁案例、官方两融/北交所备胎、
+  备用源速查与降级策略。
+- `references/layers/01-quote.md … 15-convertible.md`：十五层的完整代码与实测记录，章节号（§1.2 等）不变。
+- `references/20-valuation.md`、`21-workflows.md`、`30-faq.md`、`90-version-history.md`。
+
+### 测试与文档
+
+- 新增 `tests/_skill_source.py`：把 `SKILL.md` + `references/**/*.md` 拼成一份文本供测试使用，
+  marker 块（`<!-- v39-*:start -->`）与 `## Layer N:` 切片行为与单文件时完全一致；四个测试文件改为从这里取源。
+  版本履历（`90-version-history.md`，按约定保留发布当时的旧编号）单独排除在「§ 引用指向」语义检查之外。
+- 全量 191 条离线测试（+4 条联网默认跳过）在拆分后逐条通过；新增 `missing lines` 校验确认除
+  frontmatter description 与 When to Activate 的重写外，正文内容零丢失。
+- `README.md` / `README_en.md` 安装步骤改为整目录复制（`cp -R SKILL.md references`），
+  FAQ 里「不做目录化拆分」的旧结论已改写为按需读取的说明。
+
 ## v3.10.3 — 2026-10-23
 
 十五层、87 个入口、34 个来源都不变，返回的数据也不变。只修 §10.3 上证e互动的时间列。

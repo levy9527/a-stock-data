@@ -1,4 +1,4 @@
-"""Test the Python shipped inside SKILL.md, not a second implementation.
+"""Test the Python shipped inside the Markdown (SKILL.md + references/), not a second implementation.
 
 Offline: python3 -m unittest discover -s tests -v
 Live: ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 \
@@ -9,6 +9,7 @@ import calendar
 import json
 import os
 import re
+import sys
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -17,12 +18,14 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import requests
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _skill_source import SKILL  # noqa: E402
+
 
 def load_shipped_code():
-    skill = (Path(__file__).resolve().parents[1] / "SKILL.md").read_text(encoding="utf-8")
     namespace = {}
     for name in ("official-data-core", "official-data-backups"):
-        section = skill.split(f"<!-- {name}:start -->", 1)[1].split(f"<!-- {name}:end -->", 1)[0]
+        section = SKILL.split(f"<!-- {name}:start -->", 1)[1].split(f"<!-- {name}:end -->", 1)[0]
         block = re.search(r"```python\n(.*?)\n```", section, re.S).group(1)
         exec(compile(block, f"SKILL.md:{name}", "exec"), namespace)
     return namespace

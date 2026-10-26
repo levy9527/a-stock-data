@@ -1,8 +1,9 @@
-"""Exercise the valuation functions shipped in SKILL.md with offline data."""
+"""Exercise the valuation functions shipped in the Markdown with offline data."""
 import ast
 import json
 import math
 import re
+import sys
 import unittest
 import urllib.request
 from io import BytesIO
@@ -11,12 +12,14 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _skill_source import SKILL  # noqa: E402
+
 
 def load_valuation_functions():
-    skill = (Path(__file__).resolve().parents[1] / "SKILL.md").read_text(encoding="utf-8")
     names = {"pe_digestion", "full_valuation"}
     functions = []
-    for block in re.findall(r"```python\n(.*?)\n```", skill, re.S):
+    for block in re.findall(r"```python\n(.*?)\n```", SKILL, re.S):
         if not any(f"def {name}(" in block for name in names):
             continue
         functions.extend(node for node in ast.parse(block).body
