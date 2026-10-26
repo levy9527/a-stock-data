@@ -5,16 +5,15 @@ description: 需要写代码实际获取A股及相关市场真实数据时使用
 # A股全栈数据工具包
 
 十五层、87 个能力端点（82 主 + 5 备胎）、34 个数据源。**按需局部读取**：本文件只讲怎么用和铁律，
-每层的可运行代码在 `references/` 下，用哪层读哪层；依赖安装见
-[`references/01-common.md`](references/01-common.md#安装说明)。
+每层的可运行代码在 `references/` 下，用哪层读哪层；依赖安装见 `references/01-common.md` 的「安装说明」。
 
 ## 文件地图（先定位，再读那一份）
 
 | 文件 | 内容 | 什么时候读 |
 |------|------|-----------|
-| [`references/00-index.md`](references/00-index.md) | 87 端点总表（函数 → 拿什么 → 源）、层目录 | 只知道要什么数据、不知道用哪个函数 |
-| [`references/01-common.md`](references/01-common.md) | 依赖安装、iwencai Key、mootdx 客户端、市场前缀、`norm_ticker`、`em_get`、`V39_RETRY_SESSION` | **写任何一层代码前**（几乎所有端点都依赖这里的 helper） |
-| [`references/02-data-sources.md`](references/02-data-sources.md) | 数据源优先级、东财风控阈值与真实封禁案例、官方两融/北交所备胎、备用源速查与降级 | 选源、批量任务、主源被封 |
+| `references/00-index.md` | 87 端点总表（函数 → 拿什么 → 源）、层目录 | 只知道要什么数据、不知道用哪个函数 |
+| `references/01-common.md` | 依赖安装、iwencai Key、mootdx 客户端、市场前缀、`norm_ticker`、`em_get`、`V39_RETRY_SESSION` | **写任何一层代码前**（几乎所有端点都依赖这里的 helper） |
+| `references/02-data-sources.md` | 数据源优先级、东财风控阈值与真实封禁案例、官方两融/北交所备胎、备用源速查与降级 | 选源、批量任务、主源被封 |
 | `references/layers/01-quote.md` | §1 行情：腾讯实时/K线/逐笔、通达信盘后包、百度、复权因子、mootdx(留档) | 价格、K 线、盘口、逐笔 |
 | `references/layers/02-research.md` | §2 研报：东财个股+行业研报/PDF、同花顺一致预期、iwencai、新浪研报 | 研报、评级、EPS 预期 |
 | `references/layers/03-signal.md` | §3 信号：热点题材、北向、板块归属、个股资金流、龙虎榜、解禁、行业/板块资金流 | 热点、资金流、龙虎榜 |
