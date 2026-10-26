@@ -32,7 +32,7 @@
 
 Full-stack data toolkit for China A-Share market — 15-layer architecture · 87 capability endpoints (82 primary + 5 backups) · 34 data sources · direct HTTP calls except two TCP client libraries (mootdx / baostock)
 
-A self-contained Skill file that consolidates raw A-share and related market data from 34 sources into a ready-to-use toolkit for AI coding assistants. No need to memorize Tencent K-line paging parameters, the binary layout of TDX end-of-day packages, Eastmoney PDF Referer headers, or iwencai X-Claw authentication — it's all handled. And when a primary source bans you, there's a backup-source quick reference to fall back on.
+A self-contained Skill package (entry `SKILL.md` + per-layer `references/`) that consolidates raw A-share and related market data from 34 sources into a ready-to-use toolkit for AI coding assistants. No need to memorize Tencent K-line paging parameters, the binary layout of TDX end-of-day packages, Eastmoney PDF Referer headers, or iwencai X-Claw authentication — it's all handled. And when a primary source bans you, there's a backup-source quick reference to fall back on.
 
 > Compatible with [Claude Code](https://github.com/anthropics/claude-code) · [Codex](https://github.com/openai/codex) · [OpenClaw](https://github.com/openclaw/openclaw) · [WorkBuddy](https://www.workbuddy.cn/) · [Muse](https://muse.ai/) · [Grok Bot](https://x.ai/bot)
 >
@@ -114,7 +114,7 @@ China A-Share Full-Stack Data · 15-Layer Architecture · V3.10.3
 └── Convertibles   Eastmoney datacenter               Terms / conversion value / premium / listing status  ★V3.9
 ```
 
-> The 15 layers include a **Backup Sources & Fallback Strategy** appendix: dragon-tiger, fund flow and filings, plus official SSE/SZSE margin data and BSE current quotes with five-level books. See SKILL.md for coverage and source dates.
+> The 15 layers include a **Backup Sources & Fallback Strategy** appendix: dragon-tiger, fund flow and filings, plus official SSE/SZSE margin data and BSE current quotes with five-level books. See the matching files under `references/` for coverage and source dates.
 
 ---
 
@@ -126,9 +126,9 @@ China A-Share Full-Stack Data · 15-Layer Architecture · V3.10.3
 # 1. Create skill directory
 mkdir -p ~/.claude/skills/a-stock-data
 
-# 2. Download SKILL.md
-curl -o ~/.claude/skills/a-stock-data/SKILL.md \
-  https://raw.githubusercontent.com/simonlin1212/a-stock-data/main/SKILL.md
+# 2. Copy SKILL.md + references/ together (code lives in references/)
+git clone --depth 1 https://github.com/simonlin1212/a-stock-data /tmp/a-stock-data
+cp -R /tmp/a-stock-data/SKILL.md /tmp/a-stock-data/references ~/.claude/skills/a-stock-data/
 
 # 3. Install dependencies (V3.0: akshare no longer needed; V3.9 adds none)
 pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
@@ -136,7 +136,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 
 Launch Claude Code and say "Check the valuation of 688017" — the skill activates automatically.
 
-> **Codex / OpenClaw users:** Paste the contents of SKILL.md into your system prompt or project context file. The embedded Python code is ready to execute.
+> **Codex / OpenClaw users:** Paste SKILL.md into your system prompt or project context file (the agent uses the endpoint index in `SKILL.md` to open only the layer it needs), or git clone and read on demand.
 
 ---
 
@@ -341,7 +341,7 @@ There are 82 primary entries and 5 backups. Counts refer to capability entries: 
 | Official Margin Backup | Query SSE/SZSE separately; CNY amounts and share/unit quantities; missing SSE short balance remains null |
 | BSE Quote Backup | Board-wide or single-symbol OHLC, volume, amount and five-level snapshot; validates session date; no historical backfill or verified intraday latency |
 
-> Plus a **per-layer primary → independent-backup table** (exchange official / THS F10 / HKEX / cninfo webapi / Jin10 — all on different rate-limit planes) and a "confirmed dead" list — see the "Backup Sources & Fallback Strategy" section in SKILL.md. From V3.9 the primary K-line source is Tencent, full-market daily bars can come from the TDX package, and report lists can come from Sina.
+> Plus a **per-layer primary → independent-backup table** (exchange official / THS F10 / HKEX / cninfo webapi / Jin10 — all on different rate-limit planes) and a "confirmed dead" list — see the "Backup Sources & Fallback Strategy" section in [`references/02-data-sources.md`](references/02-data-sources.md). From V3.9 the primary K-line source is Tencent, full-market daily bars can come from the TDX package, and report lists can come from Sina.
 
 ### Authentication
 
@@ -495,7 +495,7 @@ Just tell your AI assistant:
 
 > **Architecture:** Except mootdx and baostock (both TCP client libraries), all sources use direct HTTP API calls with no third-party data wrapper in between. **Eastmoney APIs are rate-limited; all calls go through `em_get()` for serial throttling. For batch jobs, increase `EM_MIN_INTERVAL`.**
 >
-> **Fallback:** When a primary source fails, check the "Backup Sources & Fallback Strategy" section in SKILL.md. Some core data types have independent backups on **different domains with separate rate limits**. Not every capability has a backup; always verify dates and completeness after fetching.
+> **Fallback:** When a primary source fails, check the "Backup Sources & Fallback Strategy" section in [`references/02-data-sources.md`](references/02-data-sources.md). Some core data types have independent backups on **different domains with separate rate limits**. Not every capability has a backup; always verify dates and completeness after fetching.
 
 ---
 
@@ -505,7 +505,7 @@ Just tell your AI assistant:
 Constituents and weights may be published on different dates. The CNI endpoint returns a month-end snapshot; `date` is the source date. Current membership is not historical membership. This release does not integrate adjustment history or substitute zero for missing index PB.
 
 **How do I run the two new backups?**
-Execute the full Layer 12 code block in SKILL.md, then the official margin/BSE backup block. Query margin data separately for `SH` and `SZ`; BSE requires the expected session date. Date mismatches, incomplete pagination and unpublished data raise errors.
+Execute the full Layer 12 code block in [`references/layers/12-index-calendar.md`](references/layers/12-index-calendar.md), then the official margin/BSE backup block in [`references/02-data-sources.md`](references/02-data-sources.md). Query margin data separately for `SH` and `SZ`; BSE requires the expected session date. Date mismatches, incomplete pagination and unpublished data raise errors.
 
 **mootdx returns no K-lines / `tdx_client()` says no server can return data (#52)**
 Tested on 2026-09-20 on each of the 10 built-in servers: all accept TCP connections and return financials and ex-rights data, F10 only returns the "latest notes" category, and K-lines, order books and ticks come back with 0 rows. This is a server-side change; switching mootdx versions does not help. Alternatives:
@@ -513,7 +513,7 @@ Tested on 2026-09-20 on each of the 10 built-in servers: all accept TCP connecti
 > - Full-market SSE/SZSE/BSE daily bars for one trading day (with turnover value; the only daily-bar route for BSE) → §1.3 `tdx_daily_package()`
 > - Live price and order book → §1.1 Tencent, or the official exchange books in the backup table
 > - Intraday ticks → §1.4 `tencent_ticks()` (latest trading day only, no BSE)
-> - Financial snapshots / F10 "latest notes" → `tdx_client(check='finance')`, which still works; the other 8 F10 categories (company profile, shareholders, etc.) are no longer returned — see SKILL.md §6.2 for replacements
+> - Financial snapshots / F10 "latest notes" → `tdx_client(check='finance')`, which still works; the other 8 F10 categories (company profile, shareholders, etc.) are no longer returned — see `references/layers/06-fundamentals.md` §6.2 for replacements
 >
 > In K-line mode `tdx_client()` probes servers first, so a full failure takes about a minute to raise.
 
@@ -537,7 +537,7 @@ cninfo IRM only covers Shenzhen-listed companies; Shanghai tickers return 0 rows
 
 ## Verification
 
-`python3 -m unittest discover -s tests -v` extracts the shipped code directly from SKILL.md and checks dates, fields, symbol routing, units, pagination and error propagation without network access (187 offline tests as of V3.10.3, plus 4 live tests skipped by default).
+`python3 -m unittest discover -s tests -v` extracts the shipped code directly from `SKILL.md` + `references/**/*.md` and checks dates, fields, symbol routing, units, pagination and error propagation without network access (187 offline tests as of V3.10.3, plus 4 live tests skipped by default).
 
 Live tests are opt-in; the date must be a trading day the sources have already published:
 
@@ -551,6 +551,13 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 ```
 
 Per-entry row counts and data boundaries are in the [v3.9.0 integration record](docs/source-integration-v3.9.0.md); V3.8 is in [v3.8.0](docs/source-integration-v3.8.0.md) (both Chinese).
+
+### Maintenance conventions
+
+- **Docs and code are one source**: tests execute the code blocks in `references/**/*.md` verbatim — there is no second implementation. Change the docs with the code, then run `python3 -m unittest discover -s tests`.
+- **New endpoints must ship a marker block** (`<!-- v39-xxx:start -->` … `<!-- v39-xxx:end -->` around the runnable code); tests extract code by marker, see the existing `v39-*` / `v310-*` blocks.
+- **`SKILL.md` and `references/` must be updated together**: `SKILL.md` only carries the file map and ground rules; code and measured notes go under `references/layers/`.
+- Record changes in `CHANGELOG.md`; record source trade-offs and measured limits in `docs/`.
 
 ## Changelog
 

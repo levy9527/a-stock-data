@@ -1,5 +1,47 @@
 # Changelog
 
+## 未发布 — 文档结构拆分（不改数据、不改入口数）
+
+十五层、87 个入口、34 个来源与全部返回字段都不变，只重新组织文档与仓库目录。
+
+### 变更
+
+**`SKILL.md` 从 43.8 万字符的单文件改为「入口 + 分层文档」**
+
+原来所有层的可运行代码都堆在一个 `SKILL.md` 里（7653 行），agent 一激活就要整包入上下文。现在：
+
+- `SKILL.md`（约 230 行 / 1 万字符）是**唯一必读**：按层分组的 87 端点索引（§ → 函数 → 拿什么，
+  每组标题标出数据源与对应文件）、跑法、7 条核心铁律（ticker 归一化、`em_get` 限流、源优先级、
+  「确实没有」vs「接口坏了」、北京时间、Python 3.9、不编造）、When to Activate。
+  索引放进入口而不是单独一个文件：agent 取数前必然要查它，单独一份等于多一次读取。
+- `references/01-common.md`：依赖安装、iwencai Key、mootdx 客户端、市场前缀、`norm_ticker`、
+  东财统一请求 `em_get`、`V39_RETRY_SESSION` 等共用 helper（按目录跳读所需小节）。
+- `references/02-data-sources.md`：数据源优先级、东财风控与封禁案例、官方两融/北交所备胎、
+  备用源速查与降级策略。
+- `references/layers/01-quote.md … 15-convertible.md`：十五层的完整代码与实测记录，章节号（§1.2 等）不变。
+- `references/20-valuation.md`、`21-workflows.md`。
+- 不另存 FAQ 与版本历史：`30-faq.md` 的条目几乎全与 `README.md` 的 FAQ 或各层「踩坑提醒」重复，已删除；其中 agent 真正需要的一条口径（只取数、不带回测引擎，聚宽代码用 `to_joinquant()` 转换）并入 `SKILL.md` 开头，`ths_eps_forecast` 空表口径、「同花顺热点零鉴权、别打 NL 选股接口」并入 §2.2 / §3.1。
+
+### 踩坑记录与实测基线移出 skill
+
+`references/` 里的「为什么这么改 / 什么时候发现的 / 旧写法 / 实测样本」全部搬到仓库文档，正文只留结论：
+
+- 新增 [`docs/pitfalls.md`](docs/pitfalls.md)：按 § 排序，每条先给一行结论（= 正文那句话），再给证据
+  （Issue 号、发现与修正日期、实测样本、被替换的源）。含旧 § 编号对照表（V3.10.0 行情层重排）。
+- 新增 [`docs/validation-baseline.md`](docs/validation-baseline.md)：各端点最近一次验证的行数、抽样值与分页上限。
+- `references/` 侧同步清理：删掉「V3.x 替换说明」段、层标题里的版本与 issue 标记、正文里的测量日期与抽样清单；
+  踩坑段落压缩成结论（字段号 43/44/45/46、成交量整手取整与回填时点、1 分钟线 241 根、深市分钟边界、
+  qfq 等差口径、北交所无复权因子、F10 只剩「最新提示」等）。
+
+### 测试与文档
+
+- 新增 `tests/_skill_source.py`：把 `SKILL.md` + `references/**/*.md` 拼成一份文本供测试使用，
+  marker 块（`<!-- v39-*:start -->`）与 `## Layer N:` 切片行为与单文件时完全一致；四个测试文件改为从这里取源。
+- 全量 191 条离线测试（+4 条联网默认跳过）在拆分后逐条通过；新增 `missing lines` 校验确认除
+  frontmatter description 与 When to Activate 的重写外，正文内容零丢失。
+- `README.md` / `README_en.md` 安装步骤改为整目录复制（`cp -R SKILL.md references`），
+  FAQ 里「不做目录化拆分」的旧结论已改写为按需读取的说明。
+
 ## v3.10.3 — 2026-10-23
 
 十五层、87 个入口、34 个来源都不变，返回的数据也不变。只修 §10.3 上证e互动的时间列。

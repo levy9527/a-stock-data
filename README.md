@@ -116,7 +116,7 @@ A 股全栈数据 · 十五层架构 · V3.10.3
 └── 可转债    东财 datacenter                条款 / 转股价值 / 溢价率 / 上市摘牌状态  ★V3.9
 ```
 
-> 十五层之外另附**备用源速查 & 降级策略**：龙虎榜/资金流/公告备胎，以及沪深官方两融、北交所当前行情与五档备胎。使用范围和真实数据日期见 SKILL.md 对应章节。
+> 十五层之外另附**备用源速查 & 降级策略**：龙虎榜/资金流/公告备胎，以及沪深官方两融、北交所当前行情与五档备胎。使用范围和真实数据日期见 `references/` 对应章节。
 
 ---
 
@@ -128,9 +128,9 @@ A 股全栈数据 · 十五层架构 · V3.10.3
 # 1. 创建 skill 目录
 mkdir -p ~/.claude/skills/a-stock-data
 
-# 2. 把 SKILL.md 放进去
-curl -o ~/.claude/skills/a-stock-data/SKILL.md \
-  https://raw.githubusercontent.com/simonlin1212/a-stock-data/main/SKILL.md
+# 2. 把 SKILL.md + references/ 一起放进去（代码全在 references/，两者必须成套）
+git clone --depth 1 https://github.com/simonlin1212/a-stock-data /tmp/a-stock-data
+cp -R /tmp/a-stock-data/SKILL.md /tmp/a-stock-data/references ~/.claude/skills/a-stock-data/
 
 # 3. 安装依赖（V3.0 不再需要 akshare；V3.9 没有新增依赖）
 pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
@@ -138,7 +138,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 
 启动 Claude Code，说一句「帮我看看 688017 的估值」，自动激活。
 
-> **Codex / OpenClaw 用户：** 把 SKILL.md 的内容贴入你的系统 prompt 或项目上下文文件即可，内嵌的 Python 代码可直接执行。
+> **Codex / OpenClaw 用户：** 把 SKILL.md 贴入系统 prompt 或项目上下文文件（agent 会按文件地图去读 `references/` 下对应层的代码），或直接 git clone 后按需读取。
 
 ---
 
@@ -343,7 +343,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 | 官方两融备胎 | 上交所/深交所分开查询，金额元、余量股/份；上交所缺融券余额金额时保留为空 |
 | 北交所行情备胎 | 全板或单票 OHLC/成交量额/五档快照，强制核对交易日；不提供历史回填，盘中延迟未标定 |
 
-> 另附**十五层主源 → 独立备胎速查表**（交易所官方 / 同花顺 F10 / HKEX / 巨潮 webapi / 金十等，全部不同风控面）与「已死透别用」名单，见 SKILL.md「备用源速查 & 降级策略」章节。V3.9 起 K 线主源改为腾讯，当日全市场日线可用通达信盘后包，研报列表可用新浪。
+> 另附**十五层主源 → 独立备胎速查表**（交易所官方 / 同花顺 F10 / HKEX / 巨潮 webapi / 金十等，全部不同风控面）与「已死透别用」名单，见 [`references/02-data-sources.md`](references/02-data-sources.md) 的「备用源速查 & 降级策略」。V3.9 起 K 线主源改为腾讯，当日全市场日线可用通达信盘后包，研报列表可用新浪。
 
 ### 鉴权要求
 
@@ -493,7 +493,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 
 > **架构原则：** 除 mootdx 与 baostock（均为 TCP 客户端库）外，全部直连 HTTP API，不经第三方数据封装。**东财系接口有访问频率风控，所有调用统一经 `em_get()` 串行限流防封；批量任务请调大 `EM_MIN_INTERVAL`。**
 >
-> **降级原则：** 主源被封/失效时，查 SKILL.md「备用源速查 & 降级策略」。部分核心数据有**不同域名、不同风控面**的独立备胎；并非所有能力都有备份，取数后仍须检查日期与完整性。
+> **降级原则：** 主源被封/失效时，查 [`references/02-data-sources.md`](references/02-data-sources.md) 的「备用源速查 & 降级策略」。部分核心数据有**不同域名、不同风控面**的独立备胎；并非所有能力都有备份，取数后仍须检查日期与完整性。
 
 ---
 
@@ -503,7 +503,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 官方成分与权重可能按不同日期发布，国证这条接口返回月末快照；`date` 保存源文件日期。当前成分不能代替历史时点成分。本版未接入历史调样，也不把缺失的指数 PB 补为零。
 
 **Q: 两融和北交所备胎怎么用？**
-先执行 SKILL.md 的 Layer 12 完整代码块，再执行「官方两融与北交所行情备胎」代码块。两融按 `SH` / `SZ` 分开取，北交所必须传期望交易日；日期不符、分页不全、源未发布均报错。
+先执行 [`references/layers/12-index-calendar.md`](references/layers/12-index-calendar.md) 的完整代码块，再执行 [`references/02-data-sources.md`](references/02-data-sources.md) 的「官方两融与北交所行情备胎」代码块。两融按 `SH` / `SZ` 分开取，北交所必须传期望交易日；日期不符、分页不全、源未发布均报错。
 
 **Q: mootdx 取不到 K 线 / `tdx_client()` 报「所有 mootdx 服务器均无法取到数据」？（#52）**
 2026-09-20 逐台实测内置 10 台服务器，TCP 都能连上，财务、除权除息正常，F10 只剩「最新提示」一类，但 K 线、五档盘口、逐笔成交都返回 0 行。这是服务器端的变化，换 mootdx 版本解决不了。替代方案：
@@ -511,7 +511,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 > - 某交易日沪深北全市场日线（含成交额；北交所日线只能走这里）→ §1.3 `tdx_daily_package()`
 > - 实时价与五档 → §1.1 腾讯，或「备用源速查」里的交易所官方五档
 > - 当日逐笔成交 → §1.4 `tencent_ticks()`（只有最近一个交易日，不含北交所）
-> - 财务快照 / F10「最新提示」→ `tdx_client(check='finance')`，照常可用；F10 其余 8 类（公司概况、股东研究等）已不返回，替代见 SKILL.md §6.2
+> - 财务快照 / F10「最新提示」→ `tdx_client(check='finance')`，照常可用；F10 其余 8 类（公司概况、股东研究等）已不返回，替代见 `references/layers/06-fundamentals.md` §6.2
 >
 > `tdx_client()` 在 K 线模式下要先测速，全部失败大约需要 1 分钟才报错。
 
@@ -539,11 +539,11 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 **Q: 传 `SH600519` / `600519.SH` 查不到数据？**
 V3.6.0 前研报层确实如此（reportapi 只认纯 6 位数字，带前缀静默返回 0 篇）。现已新增 `norm_ticker()` 并在研报层接入，四种写法结果一致；解析不出 6 位数字时**抛 ValueError 而非返回空**，避免把"代码写错"误读成"这票没数据"。
 
-**Q: SKILL.md 这么大，agent 每次加载很费 token？**
-单文件自包含是本项目的**有意产品决策**——拷一个文件就能用、离线可携、便于分发，这个形态会长期保持，不做目录化拆分（相关讨论见 #21 / #22 / #29）。两个降耗建议：① v3.3.1 起 description 已收窄触发范围，无需取数的 A 股话题不会再误加载整个文件；② token 敏感的用户可以不把它装成自动触发 skill，改为放进项目目录、需要取数时让 agent 按需读取——文件按十五层组织、章节标题清晰，v3.4.0 起顶部还有「端点路由速查」总表（§→函数→用途→源），agent 按表定位后只读对应层，通常只花几 K token。
+**Q: 文档这么多，agent 每次加载很费 token？**
+V3.10.3 之前是单文件自包含（一次全载，40 万字符）。现在改成**入口 + 按需分层**：`SKILL.md` 是唯一必读——按层分组的 87 端点索引（§→函数→拿什么，每组标出数据源与文件）+ 跑法 + 铁律，约 1 万字符；可运行代码与实测记录按层放在 `references/layers/`，查表定位后只读那一份；`references/01-common.md` 只跳读用到的 helper。一次取数通常只花几 K token，不再整包加载。代价是 `SKILL.md` 与 `references/` 必须成套复制/更新（`tests/` 直接执行 `references/**/*.md` 里的原文代码，不会出现两份实现漂移）。
 
 **Q: 东财接口 403 / 连接重置，是被封了怎么办？**
-东财系接口（datacenter/push2/push2ex/reportapi/search/np-weblist）共用同一套风控，IP 被封会成片失联。三步：① 停止请求等 30-60 分钟（IP 级临时封通常自动解除），或换网络（手机热点）立刻恢复；② 长批任务确认全部走 `em_get()` 并调大 `EM_MIN_INTERVAL`；③ 数据不能等 → 用 SKILL.md「备用源速查 & 降级策略」的独立备胎（交易所官方/新浪/同花顺，不同风控面）。
+东财系接口（datacenter/push2/push2ex/reportapi/search/np-weblist）共用同一套风控，IP 被封会成片失联。三步：① 停止请求等 30-60 分钟（IP 级临时封通常自动解除），或换网络（手机热点）立刻恢复；② 长批任务确认全部走 `em_get()` 并调大 `EM_MIN_INTERVAL`；③ 数据不能等 → 用 [`references/02-data-sources.md`](references/02-data-sources.md)「备用源速查 & 降级策略」的独立备胎（交易所官方/新浪/同花顺，不同风控面）。
 
 **Q: 财联社快讯不是 V3.2 标注下线了吗？**
 已复活（V3.4.0）。2026-05 死的是旧 `nodeapi` 系接口；官方新版 `v1/roll/get_roll_list` 一直可用，只是强制 `sign` 校验——sign 纯本地可算（`md5(sha1(按 key 字典序拼接的 query 串))`），零 key。与东财 7×24 全球资讯互为独立备份。
@@ -587,13 +587,13 @@ akshare 本质是对东财/同花顺/新浪等公开 API 的封装，中间层�
 V2.1 改为本地自缓存。每次调用自动积累，越跑越丰富。首次运行只有当天数据。
 
 **Q: 不用 Claude Code，能用吗？**
-能。SKILL.md 本质是 Markdown + 内嵌 Python 代码。Codex、OpenClaw 或任何 AI 编程助手都能读取。你也可以直接把 Python 代码段复制出来在自己的脚本里跑。
+能。整套东西就是 Markdown + 可运行 Python 代码。Codex、OpenClaw 或任何 AI 编程助手都能读取。你也可以直接把 Python 代码段复制出来在自己的脚本里跑。
 
 ---
 
 ## 验证
 
-`python3 -m unittest discover -s tests -v` 直接从 SKILL.md 抽取发布代码，测试日期、字段、代码归属、单位、分页与错误传播，不访问网络（V3.10.3 共 187 条离线测试，另有 4 条联网测试默认跳过）。
+`python3 -m unittest discover -s tests -v` 直接从 `SKILL.md` + `references/**/*.md` 抽取发布代码，测试日期、字段、代码归属、单位、分页与错误传播，不访问网络（V3.10.3 共 187 条离线测试，另有 4 条联网测试默认跳过）。
 
 真实网络测试需显式开启，日期须是源已发布数据的交易日：
 
@@ -607,6 +607,14 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 ```
 
 逐个入口的实测行数与数据边界见 [v3.9.0 整合记录](docs/source-integration-v3.9.0.md)；V3.8 的记录见 [v3.8.0](docs/source-integration-v3.8.0.md)。
+
+### 维护约定
+
+- **代码与文档同源**：测试直接执行 `references/**/*.md` 里的原文代码块，不维护第二份实现。改代码就改文档，改完跑 `python3 -m unittest discover -s tests`。
+- **知识分两处放**：`references/` 只写结论（怎么用、怎么解释数据）；「为什么这么改」——Issue 号、发现/修正日期、实测样本、旧写法与被替换的源——写 [`docs/pitfalls.md`](docs/pitfalls.md)；各端点最近一次验证的行数与抽样值写 [`docs/validation-baseline.md`](docs/validation-baseline.md)。
+- **新增端点要带 marker 块**（`<!-- v39-xxx:start -->` … `<!-- v39-xxx:end -->` 包住可执行代码），测试按 marker 抽取，见现有 `v39-*` / `v310-*` 写法。
+- **`SKILL.md` 与 `references/` 必须成套更新**：`SKILL.md` 只放文件地图与铁律，代码和实测记录进 `references/layers/`。
+- 改动记录写 `CHANGELOG.md`；数据源取舍与实测边界写 `docs/`。
 
 ## 更新日志
 

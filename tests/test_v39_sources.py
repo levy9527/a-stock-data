@@ -1,4 +1,4 @@
-"""Test the V3.9.0 Python shipped inside SKILL.md (marker blocks v39-*), not a second implementation.
+"""Test the V3.9.0 Python shipped inside the Markdown (SKILL.md + references/) (marker blocks v39-*), not a second implementation.
 
 Offline: python3 -m unittest discover -s tests -v
 Live (hits 31 real endpoints, ~2 min): ASTOCK_LIVE_V39=2026-09-18 python3 -m unittest tests.test_v39_sources -v
@@ -22,7 +22,8 @@ from unittest.mock import MagicMock, patch
 
 import requests as REAL_REQUESTS
 
-SKILL = (Path(__file__).resolve().parents[1] / "SKILL.md").read_text(encoding="utf-8")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _skill_source import SKILL  # noqa: E402
 MARKERS = ["v39-helpers", "v39-tencent-kline", "v39-tdx-package", "v39-sina-reports", "v39-etf-shares",
            "v39-wscn-lives", "v39-cctv-news", "v39-st-list", "v39-sse-e", "v39-chinabond", "v39-repo-fixing",
            "v39-lpr", "v39-macro-calendar", "v39-futures", "v39-events", "v39-cb"]

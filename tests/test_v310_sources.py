@@ -77,10 +77,10 @@ class ShapeTests(unittest.TestCase):
                                 "1.7": "tdx_client"})
 
     def test_section_references_point_at_the_defining_section(self):
-        """「§1.N `func(`」这类引用重排后最容易指错；文件开头的历史版本说明按约定保留旧编号，不查。"""
+        """「§1.N `func(`」这类引用重排后最容易指错。"""
         where = {f: num for num, (_, funcs) in LAYER1.items() for f in funcs}
         where["tdx_client"] = "1.7"
-        texts = {"SKILL.md": SKILL.split("**使用方式：**", 1)[1]}
+        texts = {"SKILL.md": SKILL}
         for name in ("README.md", "README_en.md"):
             texts[name] = (ROOT / name).read_text(encoding="utf-8")
         checked = 0
