@@ -197,6 +197,8 @@ def ths_eps_forecast(code: str) -> pd.DataFrame:
 df = ths_eps_forecast("688017")
 print(df)
 # "预测机构数" < 3 的要谨慎
+# 返回空表 = 该股票无机构覆盖（小盘 / 次新 / ST 常见），不是接口坏了；
+# 需要兜底可改取东财 §2.1 reportapi 里的 predictThisYearEps 字段。
 ```
 
 ### 2.3 iwencai — NL语义搜索研报（唯一能力）

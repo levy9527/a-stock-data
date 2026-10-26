@@ -19,8 +19,8 @@
 - `references/02-data-sources.md`：数据源优先级、东财风控与封禁案例、官方两融/北交所备胎、
   备用源速查与降级策略。
 - `references/layers/01-quote.md … 15-convertible.md`：十五层的完整代码与实测记录，章节号（§1.2 等）不变。
-- `references/20-valuation.md`、`21-workflows.md`、`30-faq.md`。
-- 版本历史不另存一份：逐版本细节只在 `CHANGELOG.md`（skill 里不重复开发过程）。
+- `references/20-valuation.md`、`21-workflows.md`。
+- 不另存 FAQ 与版本历史：`30-faq.md` 的条目几乎全与 `README.md` 的 FAQ 或各层「踩坑提醒」重复，已删除；其中 agent 真正需要的一条口径（只取数、不带回测引擎，聚宽代码用 `to_joinquant()` 转换）并入 `SKILL.md` 开头，`ths_eps_forecast` 空表口径、「同花顺热点零鉴权、别打 NL 选股接口」并入 §2.2 / §3.1。
 
 ### 测试与文档
 

@@ -639,27 +639,3 @@ def _em_day(value):
     （只截前 10 个字符会把 '2026/09/18' 原样放行，再拿去和日期串比较就会比错）。"""
     return _v39_src_date(str(value)[:10]) if value else None
 ```
-<!-- v39-helpers:end -->
-
----
-
-## 安装说明
-
-```bash
-# 1. 创建 skill 目录
-mkdir -p ~/.claude/skills/a-stock-data
-
-# 2. 整个目录一起复制：SKILL.md 是入口，references/ 是分层文档与全部可运行代码
-cp -R SKILL.md references ~/.claude/skills/a-stock-data/
-
-# 3. 安装 Python 依赖
-pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
-
-# 4. (可选) 配置 iwencai API Key
-export IWENCAI_API_KEY="your_key_here"
-
-# 5. 启动 Claude Code，说"查一下688017的估值"即可自动激活
-```
-
-`references/` 与 `SKILL.md` 必须一起复制/更新：代码只在 `references/` 里维护一份，SKILL.md 只做路由与铁律。
-
