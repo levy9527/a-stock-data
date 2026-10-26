@@ -10,12 +10,12 @@
 
 原来所有层的可运行代码都堆在一个 `SKILL.md` 里（7653 行），agent 一激活就要整包入上下文。现在：
 
-- `SKILL.md`（约 100 行）：frontmatter、文件地图（要什么数据读哪一份）、7 条核心铁律
-  （ticker 归一化、`em_get` 限流、源优先级、「确实没有」vs「接口坏了」、北京时间、Python 3.9、不编造）、
-  When to Activate、维护与测试约定。
-- `references/00-index.md`：87 端点总表（§ → 函数 → 拿什么 → 源）+ 层目录速览。
+- `SKILL.md`（约 230 行 / 1 万字符）是**唯一必读**：按层分组的 87 端点索引（§ → 函数 → 拿什么，
+  每组标题标出数据源与对应文件）、跑法、7 条核心铁律（ticker 归一化、`em_get` 限流、源优先级、
+  「确实没有」vs「接口坏了」、北京时间、Python 3.9、不编造）、When to Activate。
+  索引放进入口而不是单独一个文件：agent 取数前必然要查它，单独一份等于多一次读取。
 - `references/01-common.md`：依赖安装、iwencai Key、mootdx 客户端、市场前缀、`norm_ticker`、
-  东财统一请求 `em_get`、`V39_RETRY_SESSION` 等共用 helper（写任何一层代码前先读）。
+  东财统一请求 `em_get`、`V39_RETRY_SESSION` 等共用 helper（按目录跳读所需小节）。
 - `references/02-data-sources.md`：数据源优先级、东财风控与封禁案例、官方两融/北交所备胎、
   备用源速查与降级策略。
 - `references/layers/01-quote.md … 15-convertible.md`：十五层的完整代码与实测记录，章节号（§1.2 等）不变。

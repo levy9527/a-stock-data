@@ -540,7 +540,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 V3.6.0 前研报层确实如此（reportapi 只认纯 6 位数字，带前缀静默返回 0 篇）。现已新增 `norm_ticker()` 并在研报层接入，四种写法结果一致；解析不出 6 位数字时**抛 ValueError 而非返回空**，避免把"代码写错"误读成"这票没数据"。
 
 **Q: 文档这么多，agent 每次加载很费 token？**
-V3.10.3 之前是单文件自包含（一次全载，40 万字符）。现在改成**入口 + 分层文档**：`SKILL.md` 只有文件地图、核心铁律和激活条件，可运行代码按层放在 `references/layers/`，另有 [`references/00-index.md`](references/00-index.md) 的端点总表（§→函数→用途→源）。agent 先读入口，按表定位到一层，再读那一份——一次取数通常只花几 K token，不再整包加载。代价是 `SKILL.md` 与 `references/` 必须成套复制/更新（`tests/` 直接执行 `references/**/*.md` 里的原文代码，不会出现两份实现漂移）。
+V3.10.3 之前是单文件自包含（一次全载，40 万字符）。现在改成**入口 + 按需分层**：`SKILL.md` 是唯一必读——按层分组的 87 端点索引（§→函数→拿什么，每组标出数据源与文件）+ 跑法 + 铁律，约 1 万字符；可运行代码与实测记录按层放在 `references/layers/`，查表定位后只读那一份；`references/01-common.md` 只跳读用到的 helper。一次取数通常只花几 K token，不再整包加载。代价是 `SKILL.md` 与 `references/` 必须成套复制/更新（`tests/` 直接执行 `references/**/*.md` 里的原文代码，不会出现两份实现漂移）。
 
 **Q: 东财接口 403 / 连接重置，是被封了怎么办？**
 东财系接口（datacenter/push2/push2ex/reportapi/search/np-weblist）共用同一套风控，IP 被封会成片失联。三步：① 停止请求等 30-60 分钟（IP 级临时封通常自动解除），或换网络（手机热点）立刻恢复；② 长批任务确认全部走 `em_get()` 并调大 `EM_MIN_INTERVAL`；③ 数据不能等 → 用 [`references/02-data-sources.md`](references/02-data-sources.md)「备用源速查 & 降级策略」的独立备胎（交易所官方/新浪/同花顺，不同风控面）。

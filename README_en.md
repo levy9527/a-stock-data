@@ -136,7 +136,7 @@ pip install mootdx requests pandas stockstats numpy baostock xlrd openpyxl
 
 Launch Claude Code and say "Check the valuation of 688017" — the skill activates automatically.
 
-> **Codex / OpenClaw users:** Paste SKILL.md into your system prompt or project context file (the agent follows the file map into `references/` for the layer it needs), or git clone and read on demand.
+> **Codex / OpenClaw users:** Paste SKILL.md into your system prompt or project context file (the agent uses the endpoint index in `SKILL.md` to open only the layer it needs), or git clone and read on demand.
 
 ---
 

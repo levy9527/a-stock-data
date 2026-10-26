@@ -1,9 +1,21 @@
 # 前置与共用 helper
 
-> 隶属 `a-stock-data` skill · 入口 [`SKILL.md`](../SKILL.md) · 端点总表 [`00-index.md`](00-index.md) · 共用 helper [`01-common.md`](01-common.md) · 备胎/降级 [`02-data-sources.md`](02-data-sources.md)
+> 隶属 `a-stock-data` skill · 入口与端点索引 [`SKILL.md`](../SKILL.md) · 共用 helper [`01-common.md`](01-common.md) · 备胎/降级 [`02-data-sources.md`](02-data-sources.md)
 > 写代码前先读 `01-common.md`（`em_get` / `norm_ticker` / `V39_RETRY_SESSION` 等）；主源被封时查 `02-data-sources.md`。
 
-<!-- 本文件 = 原 SKILL.md 的 Prerequisites + 安装说明。任何一层写代码前都要先读。 -->
+<!-- 本文件 = 原 SKILL.md 的 Prerequisites + 安装说明。按上面的目录跳读所需小节，不要通读。 -->
+
+## 目录（按需跳读，不要通读）
+
+| 小节 | 内容 | 什么时候需要 |
+|---|---|---|
+| 市场前缀规则（全局通用） | `get_prefix` / 沪市指数白名单 / 北交所号段 | **几乎所有端点**：Ticker 先归一化 |
+| Ticker 格式归一化 | `norm_ticker` / `to_joinquant` + 静默取错标的的两个坑 | **几乎所有端点** |
+| 东财数据中心统一查询 | `em_get` / `EM_SESSION` / `EM_MIN_INTERVAL`（限流防封） | **所有东财端点** |
+| V3.9.0 共用 helper | `V39_RETRY_SESSION` / `_v39_contract` / `bs_session` 等 | V3.8~V3.10 新增端点 |
+| mootdx 客户端 | `tdx_client()` + 可用服务器列表 | 仅 §6.1/§6.2/§7.2 |
+| iwencai API Key | 环境变量与申请 | 仅 §2.3 |
+| 安装说明 | 目录约定 + 依赖 | 首次部署 |
 
 ## Prerequisites
 
