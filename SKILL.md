@@ -29,9 +29,9 @@ description: 需要写代码实际获取A股及相关市场真实数据时使用
 | `references/layers/13-futures.md` | §13 期货与大宗：五家交易所日行情、期权、持仓排名、新浪实时/日K、A50、上海金 | 期货、商品、期权 |
 | `references/layers/14-events.md` | §14 事件驱动：业绩预告、机构调研、增减持、回购、质押、新股 | 事件面 |
 | `references/layers/15-convertible.md` | §15 可转债：条款、转股价、转股价值、溢价率 | 转债 |
-| [`references/20-valuation.md`](references/20-valuation.md) | 估值公式：前向 PE、PE 消化年数、PEG、`full_valuation` | 估值计算 |
-| [`references/21-workflows.md`](references/21-workflows.md) | 完整调研流程（多端点串联模板） | 单票/板块深度调研 |
-| [`references/30-faq.md`](references/30-faq.md) | FAQ：数据口径、失效判据、时区、能力边界 | 遇到「为什么是空 / 能不能回测」 |
+| `references/20-valuation.md` | 估值公式：前向 PE、PE 消化年数、PEG、`full_valuation` | 估值计算 |
+| `references/21-workflows.md` | 完整调研流程（多端点串联模板） | 单票/板块深度调研 |
+| `references/30-faq.md` | FAQ：数据口径、失效判据、时区、能力边界 | 遇到「为什么是空 / 能不能回测」 |
 
 ## 核心铁律（不读长文档也必须遵守）
 
