@@ -623,7 +623,7 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 - 目标默认 `/Users/levy/PycharmProjects/ai-conan-admin`，可用 `--target` 或环境变量 `CONAN_PROJECT_ROOT` 覆写。
 - 只下发**技能资产**（`SKILL.md` + `references/`）；`tests/`、`docs/`、`CHANGELOG`、`README` 留在上游，`--verify` 的离线测试直接跑在上游仓。
 - 目标目录只放技能资产（`SKILL.md` + `references/`），无 tests/docs/manifest/LICENSE/可执行产物；`--check` 逐文件比对上游与目标的 sha256 判断漂移。
-- 技能**不含可执行 loader**：md 里的代码是参数化的模板，实际取数由宿主项目的执行层负责（ai-conan-admin 有 `factor/factor_executor.py` 受限沙箱：subprocess + rlimit + 导入白名单）。
+- 技能**不含可执行 loader**：md 里的代码是参数化的模板，实际执行由宿主负责。ai-conan-admin 侧的通道是 `factor/factor_executor.py` 的 `run_snippet` / `POST /api/ai-factor/execute`：隔离子进程 + rlimit + 受限 builtins，放行 `requests` 与 `pandas`，代码把结果赋给 `result`。
 
 ### 维护约定
 
