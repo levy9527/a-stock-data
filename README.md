@@ -614,7 +614,7 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 
 ```bash
 ./scripts/sync_to_conan.py --check     # 漂移检测：上游 commit / 文件 hash 与目标 manifest 不一致即非零退出
-./scripts/sync_to_conan.py             # 落盘到 <target>/backend/skills/a-stock-data + 写 .upstream.json
+./scripts/sync_to_conan.py             # 落盘到 <target>/backend/skills/a-stock-data（纯镜像，不留元数据）
 ./scripts/sync_to_conan.py --deps      # 给目标 backend/.venv 补 mootdx/baostock/stockstats（--no-deps 规避 httpx 冲突）
 ./scripts/sync_to_conan.py --verify    # 离线 unittest + 真实取数冒烟 + 后端 pytest
 ./scripts/sync_to_conan.py --commit    # 可选：在目标 git 仓内提交（不 push）
@@ -622,7 +622,7 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 
 - 目标默认 `/Users/levy/PycharmProjects/ai-conan-admin`，可用 `--target` 或环境变量 `CONAN_PROJECT_ROOT` 覆写。
 - 只下发**运行时资产**（`SKILL.md` + `references/` + `scripts/astock_runtime.py`）；`tests/`、`docs/`、`CHANGELOG`、`README` 留在上游，`--verify` 的离线测试直接跑在上游仓。
-- `.upstream.json` 记录上游 repo / commit / 同步时间 / 每个文件 sha256；`--check` 靠它判断漂移。
+- 目标目录只放运行时资产（`SKILL.md` + `references/` + `scripts/astock_runtime.py`），无 tests/docs/manifest/LICENSE；`--check` 逐文件比对上游与目标的 sha256 判断漂移。
 - `scripts/astock_runtime.py` 是随同步下发的运行时：把 `references/**/*.md` 的端点代码按 AST 白名单加载成可调用函数（**import 零副作用、零网络**），用法 `python scripts/astock_runtime.py --list | --layers 01-quote --smoke`。
 
 ### 维护约定

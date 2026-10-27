@@ -2,9 +2,9 @@
 """把 a-stock-data skill 同步进 ai-conan-admin（默认落到 backend/skills/a-stock-data）。
 
 设计要点：
-- 幂等：只按白名单复制，目标目录里多余文件会被清掉（先记 manifest 再删）。
-- 可审计：`.upstream.json` 记录上游 repo / commit / 同步时间 / 每个文件 sha256。
-- 可检测：`--check` 比较上游当前 commit 与 manifest，并逐文件比对 hash，漂移即非零退出。
+- 幂等：目标目录是纯镜像，只按白名单复制，多余文件（含旧版遗留的 tests/docs）会被清掉。
+- 不落元数据：不写 manifest，目标目录只有 SKILL.md + references + scripts。
+- 可检测：`--check` 逐文件比对上游与目标的 sha256，并报出目标多余文件，漂移即非零退出。
 - 可验证：`--verify` 跑离线 unittest + runtime 真实取数冒烟 + 后端 pytest。
 - 不替你提交：默认只写文件；`--commit` 才在 lights 子模块里 git commit（不 push）。
 
@@ -30,12 +30,12 @@ from pathlib import Path
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TARGET = Path(os.environ.get("CONAN_PROJECT_ROOT", "/Users/levy/PycharmProjects/ai-conan-admin"))
 DEST_REL = "backend/skills/a-stock-data"
-MANIFEST_NAME = ".upstream.json"
 
 # 复制白名单（顶层条目；目录递归）。assets/ 是赞助二维码，与运行时无关，不同步。
 # 只同步运行时资产：SKILL.md + references + 取数运行时。
-# tests/ docs/ CHANGELOG README 属于上游开发物，不进下游运行时目录（离线测试改为在上游仓跑）。
-COPY_ENTRIES = ("SKILL.md", "LICENSE", "references", "scripts")
+# tests/ docs/ CHANGELOG/ README/ LICENSE 属于上游开发与法务物，不进下游运行时目录
+# （离线测试改为在上游仓跑）；也不写 manifest：--check 直接逐文件比对 hash。
+COPY_ENTRIES = ("SKILL.md", "references", "scripts")
 SKIP_NAMES = {"__pycache__", ".DS_Store", ".git", ".idea", ".pi"}
 SKIP_FILES = {"scripts/sync_to_conan.py"}
 
@@ -97,28 +97,6 @@ def collect(source: Path) -> dict[str, Path]:
     return files
 
 
-def upstream_info(source: Path, files: dict[str, Path]) -> dict:
-    return {
-        "repo": git("remote", "get-url", "origin", cwd=source) or "local:" + str(source),
-        "commit": git("rev-parse", "HEAD", cwd=source),
-        "branch": git("rev-parse", "--abbrev-ref", "HEAD", cwd=source),
-        "dirty": bool(git("status", "--porcelain", cwd=source)),
-        "synced_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-        "skill": "a-stock-data",
-        "files": {rel: sha256(path) for rel, path in files.items()},
-    }
-
-
-def read_manifest(dest: Path) -> dict:
-    path = dest / MANIFEST_NAME
-    if not path.is_file():
-        return {}
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-
-
 def target_dest(target: Path, dest_name: str) -> Path:
     return target / dest_name
 
@@ -131,26 +109,23 @@ def venv_python(target: Path) -> Path:
 
 
 def do_check(source: Path, dest: Path) -> int:
+    """目标目录是纯镜像：逐文件比对源码与目标的 sha256，不依赖额外元数据文件。"""
     files = collect(source)
-    manifest = read_manifest(dest)
-    if not manifest:
-        print(f"[check] {dest} 缺少 {MANIFEST_NAME}：尚未同步过")
+    if not (dest / "SKILL.md").is_file():
+        print(f"[check] {dest} 未同步过（缺 SKILL.md）")
         return 1
     problems = []
-    head = git("rev-parse", "HEAD", cwd=source)
-    if manifest.get("commit") != head:
-        problems.append(f"上游 commit 变化：{manifest.get('commit', '-')[:8]} → {head[:8]}")
-    stale = [rel for rel, path in files.items() if manifest.get("files", {}).get(rel) != sha256(path)]
-    removed = sorted(set(manifest.get("files", {})) - set(files))
     missing = sorted(rel for rel in files if not (dest / rel).is_file())
-    if stale:
-        problems.append(f"上游内容变更 {len(stale)} 个：{', '.join(stale[:6])}{' …' if len(stale) > 6 else ''}")
-    if removed:
-        problems.append(f"上游删除 {len(removed)} 个：{', '.join(removed[:6])}")
+    stale = [rel for rel, path in files.items() if (dest / rel).is_file() and sha256(path) != sha256(dest / rel)]
+    extra = sorted(set(_target_files(dest)) - set(files))
     if missing:
         problems.append(f"目标缺文件 {len(missing)} 个：{', '.join(missing[:6])}")
+    if stale:
+        problems.append(f"内容不同 {len(stale)} 个：{', '.join(stale[:6])}{' …' if len(stale) > 6 else ''}")
+    if extra:
+        problems.append(f"目标多余 {len(extra)} 个：{', '.join(extra[:6])}")
     if not problems:
-        print(f"[check] 已最新（{manifest.get('commit', '')[:8]}, {len(files)} 个文件）")
+        print(f"[check] 已最新（{len(files)} 个文件）")
         return 0
     print(f"[check] 需要同步 → {dest}")
     for item in problems:
@@ -159,10 +134,18 @@ def do_check(source: Path, dest: Path) -> int:
     return 1
 
 
+def _target_files(dest: Path) -> dict[str, Path]:
+    files: dict[str, Path] = {}
+    if not dest.is_dir():
+        return files
+    for path in dest.rglob("*"):
+        if path.is_file() and not any(part in SKIP_NAMES for part in path.relative_to(dest).parts):
+            files[path.relative_to(dest).as_posix()] = path
+    return files
+
+
 def do_sync(source: Path, dest: Path, dry_run: bool) -> int:
     files = collect(source)
-    manifest = read_manifest(dest)
-    known = set(manifest.get("files", {}))
     if dry_run:
         print(f"[sync] dry-run：将写入 {len(files)} 个文件 → {dest}")
         for rel in sorted(files):
@@ -174,8 +157,9 @@ def do_sync(source: Path, dest: Path, dry_run: bool) -> int:
         target = dest / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, target)
-    # 只清理上次由同步写进来的文件，绝不删用户手工添加的东西
-    for rel in sorted(known - set(files)):
+    # 目标目录是纯镜像：清掉不属于本次同步的文件（含旧版遗留的 tests/docs/manifest）
+    removed = sorted(set(_target_files(dest)) - set(files))
+    for rel in removed:
         stale = dest / rel
         if stale.is_file():
             stale.unlink()
@@ -186,13 +170,12 @@ def do_sync(source: Path, dest: Path, dry_run: bool) -> int:
     # 我方目录内的字节码缓存不属于同步内容（测试跑过会留下）
     for cache in sorted(dest.rglob("__pycache__"), reverse=True):
         shutil.rmtree(cache, ignore_errors=True)
-    for leftover in sorted(dest.iterdir()):  # 清掉因 pycache 残留而空不掉的目录
+    for leftover in sorted(dest.iterdir()):  # 清掉因残留而空不掉的目录
         if leftover.is_dir() and not any(leftover.rglob("*")):
             shutil.rmtree(leftover, ignore_errors=True)
-    info = upstream_info(source, files)
-    (dest / MANIFEST_NAME).write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"[sync] 写入 {len(files)} 个文件 → {dest}")
-    print(f"[sync] 上游 {info['repo']} @ {info['commit'][:8]}{' (dirty)' if info['dirty'] else ''}")
+    commit = git("rev-parse", "--short", "HEAD", cwd=source)
+    print(f"[sync] 写入 {len(files)} 个文件 → {dest}" + (f"（清理 {len(removed)} 个）" if removed else ""))
+    print(f"[sync] 上游 {git('remote', 'get-url', 'origin', cwd=source) or source} @ {commit or '?'}{' (dirty)' if git('status', '--porcelain', cwd=source) else ''}")
     toplevel = git("rev-parse", "--show-toplevel", cwd=dest)
     if toplevel:
         print(f"[sync] 提醒：{toplevel} 是 git 仓库，请自行提交；父仓还需 git add backend/skills 升 gitlink")
