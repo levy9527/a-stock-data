@@ -608,6 +608,22 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 
 逐个入口的实测行数与数据边界见 [v3.9.0 整合记录](docs/source-integration-v3.9.0.md)；V3.8 的记录见 [v3.8.0](docs/source-integration-v3.8.0.md)。
 
+### 同步到下游项目（ai-conan-admin）
+
+本仓是 skill 的唯一权威源，下游项目不手改。同步与验证都走一个脚本：
+
+```bash
+./scripts/sync_to_conan.py --check     # 漂移检测：上游 commit / 文件 hash 与目标 manifest 不一致即非零退出
+./scripts/sync_to_conan.py             # 落盘到 <target>/backend/skills/a-stock-data + 写 .upstream.json
+./scripts/sync_to_conan.py --deps      # 给目标 backend/.venv 补 mootdx/baostock/stockstats（--no-deps 规避 httpx 冲突）
+./scripts/sync_to_conan.py --verify    # 离线 unittest + 真实取数冒烟 + 后端 pytest
+./scripts/sync_to_conan.py --commit    # 可选：在目标 git 仓内提交（不 push）
+```
+
+- 目标默认 `/Users/levy/PycharmProjects/ai-conan-admin`，可用 `--target` 或环境变量 `CONAN_PROJECT_ROOT` 覆写。
+- `.upstream.json` 记录上游 repo / commit / 同步时间 / 每个文件 sha256；`--check` 靠它判断漂移。
+- `scripts/astock_runtime.py` 是随同步下发的运行时：把 `references/**/*.md` 的端点代码按 AST 白名单加载成可调用函数（**import 零副作用、零网络**），用法 `python scripts/astock_runtime.py --list | --layers 01-quote --smoke`。
+
 ### 维护约定
 
 - **代码与文档同源**：测试直接执行 `references/**/*.md` 里的原文代码块，不维护第二份实现。改代码就改文档，改完跑 `python3 -m unittest discover -s tests`。
