@@ -5,7 +5,7 @@
 - 幂等：目标目录是纯镜像，只按白名单复制，多余文件（含旧版遗留的 tests/docs）会被清掉。
 - 不落元数据：不写 manifest，目标目录只有 SKILL.md + references + scripts。
 - 可检测：`--check` 逐文件比对上游与目标的 sha256，并报出目标多余文件，漂移即非零退出。
-- 可验证：`--verify` 跑离线 unittest + runtime 真实取数冒烟 + 后端 pytest。
+- 可验证：`--verify` 跑上游离线 unittest + 下游后端 pytest（技能本身不执行代码）。
 - 不替你提交：默认只写文件；`--commit` 才在 lights 子模块里 git commit（不 push）。
 
 常用：
@@ -32,12 +32,11 @@ DEFAULT_TARGET = Path(os.environ.get("CONAN_PROJECT_ROOT", "/Users/levy/PycharmP
 DEST_REL = "backend/skills/a-stock-data"
 
 # 复制白名单（顶层条目；目录递归）。assets/ 是赞助二维码，与运行时无关，不同步。
-# 只同步运行时资产：SKILL.md + references + 取数运行时。
-# tests/ docs/ CHANGELOG/ README/ LICENSE 属于上游开发与法务物，不进下游运行时目录
-# （离线测试改为在上游仓跑）；也不写 manifest：--check 直接逐文件比对 hash。
-COPY_ENTRIES = ("SKILL.md", "references", "scripts")
+# 只同步技能资产：SKILL.md + references。没有可执行产物——技能只描述「取什么、怎么取、口径」，
+# 真正跑代码是宿主（ai-conan-admin）的执行层职责，不在技能里内置 loader。
+# tests/ docs/ CHANGELOG/ README/ LICENSE 属于上游开发与法务物，不下发；也不写 manifest。
+COPY_ENTRIES = ("SKILL.md", "references")
 SKIP_NAMES = {"__pycache__", ".DS_Store", ".git", ".idea", ".pi"}
-SKIP_FILES = {"scripts/sync_to_conan.py"}
 
 REQUIRED_DEPS = ("mootdx", "baostock", "stockstats")
 INFO_DEPS = ("requests", "pandas", "numpy", "xlrd", "openpyxl")
@@ -90,10 +89,7 @@ def collect(source: Path) -> dict[str, Path]:
                 continue
             if any(part in SKIP_NAMES for part in child.relative_to(source).parts):
                 continue
-            rel = child.relative_to(source).as_posix()
-            if rel in SKIP_FILES:
-                continue
-            files[rel] = child
+            files[child.relative_to(source).as_posix()] = child
     return files
 
 
@@ -258,7 +254,7 @@ def _summary(text: str) -> str:
     return lines[-1] if lines else ""
 
 
-def do_verify(source: Path, target: Path, dest: Path, live: bool) -> int:
+def do_verify(source: Path, target: Path, dest: Path) -> int:
     python = venv_python(target)
     if not python.is_file():
         print(f"[verify] 未找到 {python}")
@@ -273,13 +269,6 @@ def do_verify(source: Path, target: Path, dest: Path, live: bool) -> int:
     code, text = _run([str(python), "-m", "unittest", "discover", "-s", "tests", "-q"], source)
     print(f"[verify] 离线测试 {'PASS' if code == 0 else 'FAIL'}：{_summary(text)}")
     failures += code != 0
-
-    if live:
-        code, text = _run([str(python), "scripts/astock_runtime.py", "--layers", "01-quote", "--smoke"], dest)
-        print(f"[verify] 真实取数冒烟 {'PASS' if code == 0 else 'FAIL'}：{text.splitlines()[-1] if text else ''}")
-        failures += code != 0
-    else:
-        print("[verify] 真实取数冒烟 SKIP（--no-live）")
 
     test_file = target / "backend" / "tests" / "test_a_stock_data_skill.py"
     if test_file.is_file():
@@ -320,7 +309,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="只检查漂移，不写文件")
     parser.add_argument("--deps", action="store_true", help="在目标 backend/.venv 补装缺的依赖")
     parser.add_argument("--verify", action="store_true", help="离线测试 + 取数冒烟 + 后端测试")
-    parser.add_argument("--no-live", action="store_true", help="--verify 时跳过真实取数冒烟")
     parser.add_argument("--commit", action="store_true", help="同步后在目标 git 仓内提交（不 push）")
     parser.add_argument("--dry-run", action="store_true", help="只打印将写入的文件")
     args = parser.parse_args(argv)
@@ -340,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.deps:
         return do_deps(target)
     if args.verify:
-        return do_verify(source, target, dest, live=not args.no_live)
+        return do_verify(source, target, dest)
 
     code = do_sync(source, dest, dry_run=args.dry_run)
     if code != 0 or args.dry_run:
