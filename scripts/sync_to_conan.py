@@ -239,7 +239,9 @@ def _guard_httpx(python: Path) -> int:
 
 
 def _run(cmd: list[str], cwd: Path) -> tuple[int, str]:
-    out = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
+    # 不写 .pyc：验证过程不该在技能的纯镜像目录里留下 __pycache__
+    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+    out = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, env=env)
     text = (out.stdout or "") + (out.stderr or "")
     return out.returncode, text.strip()
 
