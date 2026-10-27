@@ -621,6 +621,7 @@ ASTOCK_LIVE_TRADE_DATE=2026-09-04 ASTOCK_LIVE_MARGIN_DATE=2026-09-03 python3 -m 
 ```
 
 - 目标默认 `/Users/levy/PycharmProjects/ai-conan-admin`，可用 `--target` 或环境变量 `CONAN_PROJECT_ROOT` 覆写。
+- 只下发**运行时资产**（`SKILL.md` + `references/` + `scripts/astock_runtime.py`）；`tests/`、`docs/`、`CHANGELOG`、`README` 留在上游，`--verify` 的离线测试直接跑在上游仓。
 - `.upstream.json` 记录上游 repo / commit / 同步时间 / 每个文件 sha256；`--check` 靠它判断漂移。
 - `scripts/astock_runtime.py` 是随同步下发的运行时：把 `references/**/*.md` 的端点代码按 AST 白名单加载成可调用函数（**import 零副作用、零网络**），用法 `python scripts/astock_runtime.py --list | --layers 01-quote --smoke`。
 

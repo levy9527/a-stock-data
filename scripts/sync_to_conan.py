@@ -33,7 +33,9 @@ DEST_REL = "backend/skills/a-stock-data"
 MANIFEST_NAME = ".upstream.json"
 
 # 复制白名单（顶层条目；目录递归）。assets/ 是赞助二维码，与运行时无关，不同步。
-COPY_ENTRIES = ("SKILL.md", "README.md", "README_en.md", "CHANGELOG.md", "LICENSE", "references", "docs", "tests", "scripts")
+# 只同步运行时资产：SKILL.md + references + 取数运行时。
+# tests/ docs/ CHANGELOG README 属于上游开发物，不进下游运行时目录（离线测试改为在上游仓跑）。
+COPY_ENTRIES = ("SKILL.md", "LICENSE", "references", "scripts")
 SKIP_NAMES = {"__pycache__", ".DS_Store", ".git", ".idea", ".pi"}
 SKIP_FILES = {"scripts/sync_to_conan.py"}
 
@@ -181,6 +183,12 @@ def do_sync(source: Path, dest: Path, dry_run: bool) -> int:
                 stale.parent.rmdir()
             except OSError:
                 pass
+    # 我方目录内的字节码缓存不属于同步内容（测试跑过会留下）
+    for cache in sorted(dest.rglob("__pycache__"), reverse=True):
+        shutil.rmtree(cache, ignore_errors=True)
+    for leftover in sorted(dest.iterdir()):  # 清掉因 pycache 残留而空不掉的目录
+        if leftover.is_dir() and not any(leftover.rglob("*")):
+            shutil.rmtree(leftover, ignore_errors=True)
     info = upstream_info(source, files)
     (dest / MANIFEST_NAME).write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"[sync] 写入 {len(files)} 个文件 → {dest}")
@@ -265,7 +273,7 @@ def _summary(text: str) -> str:
     return lines[-1] if lines else ""
 
 
-def do_verify(target: Path, dest: Path, live: bool) -> int:
+def do_verify(source: Path, target: Path, dest: Path, live: bool) -> int:
     python = venv_python(target)
     if not python.is_file():
         print(f"[verify] 未找到 {python}")
@@ -276,7 +284,8 @@ def do_verify(target: Path, dest: Path, live: bool) -> int:
         print(f"[verify] 目标无 SKILL.md：{dest}（先跑同步）")
         return 1
 
-    code, text = _run([str(python), "-m", "unittest", "discover", "-s", "tests", "-q"], dest)
+    # 离线测试跑在上游仓（tests/ 不下发），验证的是「即将同步的那份 md」
+    code, text = _run([str(python), "-m", "unittest", "discover", "-s", "tests", "-q"], source)
     print(f"[verify] 离线测试 {'PASS' if code == 0 else 'FAIL'}：{_summary(text)}")
     failures += code != 0
 
@@ -346,7 +355,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.deps:
         return do_deps(target)
     if args.verify:
-        return do_verify(target, dest, live=not args.no_live)
+        return do_verify(source, target, dest, live=not args.no_live)
 
     code = do_sync(source, dest, dry_run=args.dry_run)
     if code != 0 or args.dry_run:
